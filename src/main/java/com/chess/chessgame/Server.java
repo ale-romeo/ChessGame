@@ -47,7 +47,8 @@ public class Server {
             Socket waitingClient = waitingClients.remove(0);
             ClientHandler clientHandler = new ClientHandler(clientSocket, waitingClient);
             clients.add(clientHandler);
-            clientHandler.run();
+            Thread clientThread = new Thread(clientHandler);
+            clientThread.start();
             System.out.println("Partita avviata tra " + clientSocket.getInetAddress() +
                     " e " + waitingClient.getInetAddress());
         } else {

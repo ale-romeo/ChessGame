@@ -18,6 +18,8 @@ public class ClientPlayer extends Application {
     private String nickname;
     private String color;
     private Socket socket;
+    private String serverAddress;
+    private int serverPort;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
 
@@ -27,9 +29,7 @@ public class ClientPlayer extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        ClientPlayer client = new ClientPlayer();
-        client.connect("localhost", 12345); // Indirizzo del server e numero di porta
-
+        readConfigFromXML("config.xml");
         primaryStage.setTitle("Benvenuto");
 
         // Creazione dei controlli
@@ -40,8 +40,9 @@ public class ClientPlayer extends Application {
         // Azione del pulsante "Inizia partita"
         startButton.setOnAction(event -> {
             nickname = nicknameTextField.getText();
+            Label waitingLabel = new Label("In attesa di un avversario...");
             // Avvia il gioco o altre azioni in base alla logica del tuo programma
-            System.out.println("Partita iniziata con il nickname: " + nickname);
+            startGame(nickname);
         });
 
         // Creazione del layout
@@ -57,6 +58,24 @@ public class ClientPlayer extends Application {
         primaryStage.show();
     }
 
+    private void startGame(String nickname) {
+        Thread connectionThread = new Thread(() -> {
+            try {
+                Socket serverSocket = new Socket(serverAddress, serverPort);
+                //sendNickname(socket, nickname);
+                Color color = receiveColor(serverSocket);
+                Chessboard chessboard = receiveChessboard(serverSocket);
+                // Altri passaggi per la gestione della partita
+            } catch (IOException e) {
+                e.printStackTrace();
+                // Gestione dell'errore di connessione
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        connectionThread.start();
+    }
+
     public String getNickname() {
         return nickname;
     }
@@ -65,29 +84,36 @@ public class ClientPlayer extends Application {
         this.nickname = nickname;
     }
 
+    private void sendNickname(Socket socket, String nickname) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+        outputStream.writeObject(nickname);
+        outputStream.flush();
+    }
+
+    private void readConfigFromXML(String filePath) {
+        ConfigReader configReader = new ConfigReader();
+        configReader.readConfigFromXML(filePath);
+        this.serverAddress = configReader.getServerAddress();
+        this.serverPort = configReader.getServerPort();
+    }
+
+    private Color receiveColor(Socket serverSocket) throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (Color) serverInputStream.readObject();
+    }
+
+    private Chessboard receiveChessboard(Socket serverSocket) throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (Chessboard) serverInputStream.readObject();
+    }
+
+
     public String getColor() {
         return color;
     }
 
     public void setColor(String color) {
         this.color = color;
-    }
-
-    public void connect(String serverAddress, int port) {
-        try {
-            socket = new Socket(serverAddress, port);
-            System.out.println("Connessione al server stabilita.");
-
-            while (true) {
-                inputStream = new ObjectInputStream(socket.getInputStream());
-                outputStream = new ObjectOutputStream(socket.getOutputStream());
-            }
-
-            // Logica per gestire la comunicazione con il server
-
-        } catch (IOException e) {
-            System.out.println("Errore durante la connessione al server: " + e.getMessage());
-        }
     }
 
     public void sendMove(Move move) {

@@ -9,13 +9,11 @@ public class Knight extends Piece {
             {1, -2}, {1, 2}, {2, -1}, {2, 1}
     };
 
-    public Knight(Color color, List<Move> availableMoves) {
-        super(color, availableMoves);
-    }
+    public Knight(Color color) { super(color); }
 
     @Override
-    public List<Move> getAvailableMoves(Chessboard board, Square currentSquare) {
-        List<Move> availableMoves = new ArrayList<>();
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
 
@@ -28,12 +26,10 @@ public class Knight extends Piece {
             Square targetSquare = board.getSquare(targetRank, targetFile);
             if (targetSquare != null) {
                 if (!board.isOccupied(targetSquare) || board.isOccupiedByOpponent(targetSquare, getColor())) {
-                    availableMoves.add(new Move(currentSquare, targetSquare));
+                    addAvailableMoves(new Move(currentSquare, targetSquare));
                 }
             }
         }
-
-        return availableMoves;
     }
 }
 

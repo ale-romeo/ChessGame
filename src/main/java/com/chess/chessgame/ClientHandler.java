@@ -31,9 +31,10 @@ public class ClientHandler implements Runnable {
         try {
             sendColor(White, Color.WHITE);
             sendColor(Black, Color.BLACK);
+            sendChessboard(White, this.chessboard);
+            sendChessboard(Black, this.chessboard);
 
-            playGame(White, Black);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             System.out.println("Errore durante l'esecuzione del client handler: " + e.getMessage());
         }
     }
@@ -44,58 +45,16 @@ public class ClientHandler implements Runnable {
         clientOutputStream.flush();
     }
 
-    private void sendChessboard(ObjectOutputStream outputStream) throws IOException {
-        // Invia la scacchiera al giocatore tramite l'output stream
-        outputStream.writeObject(this.chessboard);
-        outputStream.flush();
+    private void sendChessboard(Socket clientSocket, Chessboard chessboard) throws IOException {
+        ObjectOutputStream clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+        clientOutputStream.writeObject(chessboard);
+        clientOutputStream.flush();
     }
 
 
-    private void playGame(Socket white, Socket black) throws IOException, ClassNotFoundException {
-        // Crea gli stream di input/output per i giocatori bianco e nero
-        ObjectInputStream whiteInputStream = new ObjectInputStream(white.getInputStream());
-        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(white.getOutputStream());
 
-        ObjectInputStream blackInputStream = new ObjectInputStream(black.getInputStream());
-        ObjectOutputStream blackOutputStream = new ObjectOutputStream(black.getOutputStream());
 
-        // Invia la scacchiera iniziale ai giocatori
-        sendChessboard(whiteOutputStream);
-        sendChessboard(blackOutputStream);
 
-        // Inizializza il giocatore corrente come bianco
-        ObjectInputStream currentPlayerInputStream = whiteInputStream;
-        ObjectOutputStream currentPlayerOutputStream = whiteOutputStream;
-
-        while (true) {
-            // Ricevi la mossa dal giocatore corrente
-            Move move = (Move) currentPlayerInputStream.readObject();
-
-            // Valida la mossa e aggiorna la scacchiera
-            if (isValidMove(move)) {
-                updateChessboard(move);
-                sendMoveToOpponent(move, currentPlayerOutputStream);
-            } else {
-                // Invia un messaggio di errore al giocatore che ha fatto una mossa non valida
-                sendErrorMessage(currentPlayerOutputStream, "Mossa non valida. Riprova.");
-            }
-
-            // Controlla se il giocatore corrente ha vinto
-            if (hasCurrentPlayerWon()) {
-                // Invia un messaggio di vittoria al giocatore corrente
-                sendVictoryMessage(currentPlayerOutputStream);
-                break; // Termina il gioco
-            }
-
-            // Passa al giocatore successivo
-            currentPlayerInputStream = (currentPlayerInputStream == whiteInputStream) ? blackInputStream : whiteInputStream;
-            currentPlayerOutputStream = (currentPlayerOutputStream == whiteOutputStream) ? blackOutputStream : whiteOutputStream;
-        }
-    }
-
-    public boolean isValidMove(Move move) {
-
-    }
 
 
     public void receiveMove() {

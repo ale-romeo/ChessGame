@@ -4,13 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Bishop extends Piece {
-    public Bishop(Color color, List<Move> availableMoves) {
-        super(color, availableMoves);
-    }
+    public Bishop(Color color) { super(color); }
 
     @Override
-    public List<Move> getAvailableMoves(Chessboard board, Square currentSquare) {
-        List<Move> availableMoves = new ArrayList<>();
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
 
@@ -22,9 +20,9 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
                 break;
             } else {
                 break;
@@ -39,9 +37,9 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
                 break;
             } else {
                 break;
@@ -56,9 +54,9 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
                 break;
             } else {
                 break;
@@ -73,16 +71,14 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                availableMoves.add(new Move(currentSquare, nextSquare));
+                addAvailableMoves(new Move(currentSquare, nextSquare));
                 break;
             } else {
                 break;
             }
         }
-
-        return availableMoves;
     }
 }
 
