@@ -25,7 +25,7 @@ public class King extends Piece {
     }
 
     private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file) {
-        Square targetSquare = board.getSquare(rank, file);
+        Square targetSquare = board.getSquare(rank - 1, file);
         if (targetSquare != null && (!board.isOccupied(targetSquare) || board.isOccupiedByOpponent(targetSquare, getColor()))) {
             List<Square> threats = getThreats(board, targetSquare);
             if (!threats.contains(targetSquare)) {
@@ -60,8 +60,8 @@ public class King extends Piece {
         int direction = (kingColor == Color.WHITE) ? -1 : 1; // Direzione dei pedoni avversari
 
         // Calcola le caselle in cui i pedoni avversari possono minacciare il re
-        Square leftThreat = board.getSquare(kingSquare.getRank() + direction, (char) (kingSquare.getFile() - 1));
-        Square rightThreat = board.getSquare(kingSquare.getRank() + direction, (char) (kingSquare.getFile() + 1));
+        Square leftThreat = board.getSquare(kingSquare.getRank() + direction - 1, (char) (kingSquare.getFile() - 1));
+        Square rightThreat = board.getSquare(kingSquare.getRank() + direction - 1, (char) (kingSquare.getFile() + 1));
 
         // Verifica se i pedoni avversari minacciano il re
         if (leftThreat != null && board.isOccupiedByOpponent(leftThreat, kingColor) && leftThreat.getPiece() instanceof Pawn) {
@@ -99,7 +99,7 @@ public class King extends Piece {
         for (Square square : board.getAllSquares()) {
             Piece piece = square.getPiece();
             if (piece != null && piece.getColor() != kingColor && piece instanceof Knight) {
-                List<Move> knightMoves = piece.getAvailableMoves(board, square);
+                List<Move> knightMoves = piece.getAvailableMoves();
                 for (Move move: knightMoves) {
                     if (move.getToSquare().equals(kingSquare)) {
                         threats.add(square);
@@ -118,7 +118,7 @@ public class King extends Piece {
         for (Square square : board.getAllSquares()) {
             Piece piece = square.getPiece();
             if (piece != null && piece.getColor() != kingColor && piece instanceof King) {
-                List<Move> kingMoves = piece.getAvailableMoves(board, square);
+                List<Move> kingMoves = piece.getAvailableMoves();
                 for (Move move: kingMoves) {
                     if (move.getToSquare().equals(kingSquare)) {
                         threats.add(square);
@@ -140,7 +140,7 @@ public class King extends Piece {
                 for (char i = 'A'; i <= 'H'; i++) {
                     int targetRank = kingSquare.getRank() + (i * dy);
                     char targetFile = (char) (kingSquare.getFile() + (i * dx));
-                    Square targetSquare = board.getSquare(targetRank, targetFile);
+                    Square targetSquare = board.getSquare(targetRank - 1, targetFile);
 
                     if (targetSquare == null) {
                         break; // Fuori dalla scacchiera, interrompi il ciclo
@@ -172,7 +172,7 @@ public class King extends Piece {
         for (int dx : directions) {
             int targetRank = kingSquare.getRank();
             char targetFile = (char) (kingSquare.getFile() + dx);
-            Square targetSquare = board.getSquare(targetRank, targetFile);
+            Square targetSquare = board.getSquare(targetRank - 1, targetFile);
 
             while (targetSquare != null) {
                 Piece piece = targetSquare.getPiece();
@@ -188,14 +188,14 @@ public class King extends Piece {
                 }
 
                 targetFile += dx;
-                targetSquare = board.getSquare(targetRank, targetFile);
+                targetSquare = board.getSquare(targetRank - 1, targetFile);
             }
         }
 
         for (int dy : directions) {
             int targetRank = kingSquare.getRank() + dy;
             char targetFile = kingSquare.getFile();
-            Square targetSquare = board.getSquare(targetRank, targetFile);
+            Square targetSquare = board.getSquare(targetRank - 1, targetFile);
 
             while (targetSquare != null) {
                 Piece piece = targetSquare.getPiece();
@@ -211,7 +211,7 @@ public class King extends Piece {
                 }
 
                 targetRank += dy;
-                targetSquare = board.getSquare(targetRank, targetFile);
+                targetSquare = board.getSquare(targetRank - 1, targetFile);
             }
         }
 

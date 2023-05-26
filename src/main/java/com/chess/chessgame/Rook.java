@@ -44,7 +44,7 @@ public class Rook extends Piece {
 
         // Movimento verticale verso l'alto
         for (int rank = currentRank + 1; rank <= 8; rank++) {
-            Square nextSquare = board.getSquare(rank, currentFile);
+            Square nextSquare = board.getSquare(rank - 1, currentFile);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
@@ -59,7 +59,7 @@ public class Rook extends Piece {
 
         // Movimento verticale verso il basso
         for (int rank = currentRank - 1; rank >= 1; rank--) {
-            Square nextSquare = board.getSquare(rank, currentFile);
+            Square nextSquare = board.getSquare(rank + 1, currentFile);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {

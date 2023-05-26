@@ -26,7 +26,7 @@ public class Queen extends Piece {
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
 
-        int targetRank = currentRank + rankOffset;
+        int targetRank = currentRank + rankOffset -  1;
         char targetFile = (char) (currentFile + fileOffset);
 
         while (board.isValidSquare(targetRank, targetFile)) {
@@ -51,7 +51,7 @@ public class Queen extends Piece {
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
 
-        int targetRank = currentRank + rankOffset;
+        int targetRank = currentRank + rankOffset - 1;
         char targetFile = (char) (currentFile + fileOffset);
 
         while (board.isValidSquare(targetRank, targetFile)) {

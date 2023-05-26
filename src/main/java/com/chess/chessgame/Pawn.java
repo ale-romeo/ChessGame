@@ -15,14 +15,17 @@ public class Pawn extends Piece {
         // Calcola la direzione in base al colore del pezzo
         int direction = (getColor() == Color.WHITE) ? 1 : -1;
 
+
         // Movimento in avanti di una casella
-        Square nextSquare = board.getSquare(currentRank + direction, currentFile);
+        Square nextSquare = board.getSquare(currentRank + direction - 1, currentFile);
+        System.out.println(currentFile + "" + currentRank + "" + nextSquare.getFile() + "" + nextSquare.getRank());
+
         if (nextSquare != null && !board.isOccupied(nextSquare)) {
             addAvailableMoves(new Move(currentSquare, nextSquare));
 
             // Movimento in avanti di due caselle se è il primo movimento del pedone
             if (isFirstMove(currentRank, direction)) {
-                Square doubleMoveSquare = board.getSquare(currentRank + (2 * direction), currentFile);
+                Square doubleMoveSquare = board.getSquare(currentRank + (2 * direction) - 1, currentFile);
                 if (doubleMoveSquare != null && !board.isOccupied(doubleMoveSquare)) {
                     addAvailableMoves(new Move(currentSquare, doubleMoveSquare));
                 }
@@ -30,8 +33,8 @@ public class Pawn extends Piece {
         }
 
         // Movimento diagonale per cattura
-        Square captureSquare1 = board.getSquare(currentRank + direction, (char) (currentFile + 1));
-        Square captureSquare2 = board.getSquare(currentRank + direction, (char) (currentFile - 1));
+        Square captureSquare1 = board.getSquare(currentRank + direction - 1, (char) (currentFile + 1));
+        Square captureSquare2 = board.getSquare(currentRank + direction - 1, (char) (currentFile - 1));
         if (captureSquare1 != null && board.isOccupiedByOpponent(captureSquare1, getColor())) {
             addAvailableMoves(new Move(currentSquare, captureSquare1));
         }

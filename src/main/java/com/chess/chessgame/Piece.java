@@ -1,10 +1,12 @@
 package com.chess.chessgame;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Piece {
+public abstract class Piece implements Serializable {
     private Color color;
-    private List<Move> availableMoves;
+    private List<Move> availableMoves = new ArrayList<>();
     public abstract void calculatePossibleMoves(Chessboard board, Square currentSquare);
 
     public Piece(Color color) {
@@ -19,7 +21,7 @@ public abstract class Piece {
         this.color = color;
     }
 
-    public List<Move> getAvailableMoves(Chessboard board, Square currentSquare) {
+    public List<Move> getAvailableMoves() {
         return availableMoves;
     }
 
@@ -27,6 +29,9 @@ public abstract class Piece {
         this.availableMoves = availableMoves;
     }
     public void addAvailableMoves(Move move) {
-        this.availableMoves.add(move);
+        if (availableMoves == null) {
+            availableMoves = new ArrayList<>();
+        }
+        availableMoves.add(move);
     }
 }

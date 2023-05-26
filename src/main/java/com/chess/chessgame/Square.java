@@ -1,6 +1,8 @@
 package com.chess.chessgame;
 
-public class Square {
+import java.io.Serializable;
+
+public class Square implements Serializable {
     private int rank;
     private char file;
     private Piece piece;
