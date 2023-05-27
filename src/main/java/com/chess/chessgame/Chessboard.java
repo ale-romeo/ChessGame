@@ -56,8 +56,8 @@ public class Chessboard implements Serializable {
     }
 
     public Square getSquare(int rank, char file) {
-        if (isValidSquare(rank, file)) {
-            return squares[rank][file - 'A'];
+        if (isValidSquare(rank - 1, file)) {
+            return squares[rank - 1][file - 'A'];
         }
         return null;
     }
@@ -74,7 +74,6 @@ public class Chessboard implements Serializable {
         return allSquares;
     }
 
-
     public boolean isValidSquare(int rank, char file) {
         return rank >= 0 && rank < 8 && file >= 'A' && file <= 'H';
     }
@@ -90,5 +89,12 @@ public class Chessboard implements Serializable {
         return false;
     }
 
-    // Altre funzioni utili per la gestione della scacchiera
+    public void movePiece(Move move) {
+        Piece piece = move.getPiece();
+        squares[move.getFromSquare().getRank() - 1][move.getFromSquare().getFile() - 'A'].clearPiece();
+        if (isOccupied(squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A']) && isOccupiedByOpponent(squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'], move.getToSquare().getPiece().getColor())) {
+            squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'].clearPiece();
+        }
+        squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'].setPiece(piece);
+    }
 }

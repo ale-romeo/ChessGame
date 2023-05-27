@@ -23,7 +23,7 @@ public class Knight extends Piece {
             int targetRank = currentRank + rankOffset;
             char targetFile = (char) (currentFile + fileOffset);
 
-            Square targetSquare = board.getSquare(targetRank - 1, targetFile);
+            Square targetSquare = board.getSquare(targetRank, targetFile);
             if (targetSquare != null) {
                 if (!board.isOccupied(targetSquare) || board.isOccupiedByOpponent(targetSquare, getColor())) {
                     addAvailableMoves(new Move(currentSquare, targetSquare));

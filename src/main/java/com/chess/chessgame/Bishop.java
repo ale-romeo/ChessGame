@@ -16,7 +16,7 @@ public class Bishop extends Piece {
         char file = currentFile;
         for (int rank = currentRank + 1; rank <= 8; rank++) {
             file++;
-            Square nextSquare = board.getSquare(rank - 1, file);
+            Square nextSquare = board.getSquare(rank, file);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
@@ -33,7 +33,7 @@ public class Bishop extends Piece {
         file = currentFile;
         for (int rank = currentRank + 1; rank <= 8; rank++) {
             file--;
-            Square nextSquare = board.getSquare(rank - 1, file);
+            Square nextSquare = board.getSquare(rank, file);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
@@ -50,7 +50,7 @@ public class Bishop extends Piece {
         file = currentFile;
         for (int rank = currentRank - 1; rank >= 1; rank--) {
             file--;
-            Square nextSquare = board.getSquare(rank - 1, file);
+            Square nextSquare = board.getSquare(rank, file);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
@@ -67,7 +67,7 @@ public class Bishop extends Piece {
         file = currentFile;
         for (int rank = currentRank - 1; rank >= 1; rank--) {
             file++;
-            Square nextSquare = board.getSquare(rank - 1, file);
+            Square nextSquare = board.getSquare(rank, file);
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {

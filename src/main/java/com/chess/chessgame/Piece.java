@@ -25,13 +25,15 @@ public abstract class Piece implements Serializable {
         return availableMoves;
     }
 
-    public void setAvailableMoves(List<Move> availableMoves) {
-        this.availableMoves = availableMoves;
-    }
     public void addAvailableMoves(Move move) {
         if (availableMoves == null) {
             availableMoves = new ArrayList<>();
         }
         availableMoves.add(move);
+    }
+    public void clearAvailableMoves() {
+        if (availableMoves != null) {
+            availableMoves.clear();
+        }
     }
 }

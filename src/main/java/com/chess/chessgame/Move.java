@@ -1,6 +1,8 @@
 package com.chess.chessgame;
 
-public class Move {
+import java.io.Serializable;
+
+public class Move implements Serializable {
     private Square fromSquare;
     private Square toSquare;
 

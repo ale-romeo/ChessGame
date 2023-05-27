@@ -29,13 +29,16 @@ import java.util.ArrayList;
 public class ClientPlayer extends Application {
     private String nickname;
     private Color color;
-    private Socket socket;
+    private Socket serverSocket;
     private String serverAddress;
     private int serverPort;
     private Chessboard chessboard;
     private ObjectInputStream inputStream;
-    private ObjectOutputStream outputStream;
     private List<Circle> highlightedCircles = new ArrayList<>();
+    private List<Move> posMoves = new ArrayList<>();
+    public boolean myTurn;
+    public boolean gameStatus = true;
+    public boolean wait;
 
 
     public static void main(String[] args) {
@@ -57,7 +60,7 @@ public class ClientPlayer extends Application {
             nickname = nicknameTextField.getText();
             Label waitingLabel = new Label("In attesa di un avversario...");
             // Avvia il gioco o altre azioni in base alla logica del tuo programma
-            startGame(primaryStage, nickname);
+            initGame(primaryStage, nickname);
         });
 
         // Creazione del layout
@@ -73,22 +76,14 @@ public class ClientPlayer extends Application {
         primaryStage.show();
     }
 
-    private void startGame(Stage primaryStage, String nickname) {
-        Thread connectionThread = new Thread(() -> {
+    private void initGame(Stage primaryStage, String nickname) {
+        Thread gameThread = new Thread(() -> {
             try {
-                Socket serverSocket = new Socket(serverAddress, serverPort);
-                //sendNickname(socket, nickname);
-                this.color = receiveColor(serverSocket);
-                this.chessboard = receiveChessboard(serverSocket);
+                this.serverSocket = new Socket(serverAddress, serverPort);
+                sendNickname(nickname);
+                this.color = receiveColor();
 
-                Platform.runLater(() -> {
-                    GridPane gridPane = createChessboard();
-
-                    primaryStage.setTitle("Chess Game - " + nickname);
-                    primaryStage.setScene(new Scene(gridPane, 450, 450));
-                    displayChessboard(gridPane);
-                });
-
+                playGame(primaryStage);
             } catch (IOException e) {
                 e.printStackTrace();
                 // Gestione dell'errore di connessione
@@ -96,21 +91,30 @@ public class ClientPlayer extends Application {
                 throw new RuntimeException(e);
             }
         });
-        connectionThread.start();
+        gameThread.start();
     }
 
-    public String getNickname() {
-        return nickname;
-    }
+    private void playGame(Stage primaryStage) {
+            while (gameStatus) {
+                try {
+                    this.gameStatus = receiveStatus();
+                    this.chessboard = receiveChessboard();
+                    this.myTurn = receiveTurn();
+                    Platform.runLater(() -> {
+                        GridPane gridPane = createChessboard();
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
-    private void sendNickname(Socket socket, String nickname) throws IOException {
-        ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-        outputStream.writeObject(nickname);
-        outputStream.flush();
+                        primaryStage.setTitle("Chess Game - " + nickname);
+                        primaryStage.setScene(new Scene(gridPane, 450, 450));
+                        displayChessboardInGame(gridPane);
+                    });
+                    if (myTurn) {
+                        while (wait);
+                        wait = true;
+                    }
+                } catch (IOException | ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
     }
 
     private void readConfigFromXML(String filePath) {
@@ -120,12 +124,22 @@ public class ClientPlayer extends Application {
         this.serverPort = configReader.getServerPort();
     }
 
-    private Color receiveColor(Socket serverSocket) throws IOException, ClassNotFoundException {
+    private Color receiveColor() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
         return (Color) serverInputStream.readObject();
     }
 
-    private Chessboard receiveChessboard(Socket serverSocket) throws IOException, ClassNotFoundException {
+    private boolean receiveTurn() throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (Color) serverInputStream.readObject() == this.color;
+    }
+
+    private boolean receiveStatus() throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return ((String) serverInputStream.readObject()).equals("Running");
+    }
+
+    private Chessboard receiveChessboard() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
         return (Chessboard) serverInputStream.readObject();
     }
@@ -140,18 +154,18 @@ public class ClientPlayer extends Application {
         for (char file = 'H'; file >= 'A'; file--) {
             Label label = new Label(String.valueOf(file));
             label.setStyle("-fx-font-weight: bold;");
-            gridPane.add(label, 'H' - file, 8);
+            gridPane.add(label, 'H' - file, 9);
         }
 
         // Inserimento dei numeri accanto ad ogni riga
         for (int rank = 1; rank <= 8; rank++) {
             Label label = new Label(String.valueOf(rank));
             label.setStyle("-fx-font-weight: bold;");
-            gridPane.add(label, 8, rank-1);
+            gridPane.add(label, 8, rank);
         }
 
         // Creazione delle caselle della scacchiera come rettangoli colorati
-        for (int rank = 0; rank < 8; rank++) {
+        for (int rank = 1; rank <= 8; rank++) {
             for (char file = 'A'; file <= 'H'; file++) {
                 Rectangle square = new Rectangle(50, 50, (rank + ('H' - file)) % 2 == 0 ? javafx.scene.paint.Color.WHITE : javafx.scene.paint.Color.LIGHTGRAY);
                 gridPane.add(square, 'H' - file, rank);
@@ -161,10 +175,10 @@ public class ClientPlayer extends Application {
         return gridPane;
     }
 
-    private void displayChessboard(GridPane gridPane) {
+    private void displayChessboardInGame(GridPane gridPane) {
         // Posizionamento dei pezzi sulla scacchiera grafica
         for (char file = 'A'; file <= 'H'; file++) {
-            for (int rank = 0; rank < 8; rank++) {
+            for (int rank = 1; rank <= 8; rank++) {
                 Square currSquare = this.chessboard.getSquare(rank, file);
                 Piece piece = currSquare.getPiece();
                 if (piece != null) {
@@ -173,14 +187,19 @@ public class ClientPlayer extends Application {
 
                     if (piece.getColor() == this.color){
                         pieceImageView.setOnMouseClicked(event -> {
+                            // Nuovo pezzo selezionato
+                            clearHighlightedMoves(gridPane);
+                            posMoves.clear();
                             // Ottenere le possibili mosse del pezzo
+                            piece.clearAvailableMoves();
                             piece.calculatePossibleMoves(this.chessboard, currSquare);
-                            List<Move> possibleMoves = piece.getAvailableMoves();
-                            if (possibleMoves != null) {
+                            posMoves = piece.getAvailableMoves();
+                            if (posMoves != null) {
                                 // Mostrare le possibili mosse (ad esempio, evidenziando le caselle)
-                                highlightPossibleMoves(possibleMoves, gridPane);
+                                highlightPossibleMoves(gridPane);
                             }
                         });
+
                     }
 
                     // Posizionamento del componente grafico nel GridPane
@@ -190,12 +209,10 @@ public class ClientPlayer extends Application {
         }
     }
 
-    private void highlightPossibleMoves(List<Move> moves, GridPane gridPane) {
-        for (Circle circle : highlightedCircles) {
-            gridPane.getChildren().remove(circle);
-        }
-        highlightedCircles.clear();
-        for (Move move : moves) {
+    private void highlightPossibleMoves(GridPane gridPane) {
+        clearHighlightedMoves(gridPane);
+
+        for (Move move : posMoves) {
             int targetRank = move.getToSquare().getRank();
             char targetFile = move.getToSquare().getFile();
 
@@ -203,15 +220,26 @@ public class ClientPlayer extends Application {
             GridPane.setHalignment(targetCircle, HPos.CENTER); // Centra il cerchio orizzontalmente
             GridPane.setValignment(targetCircle, VPos.CENTER);
             GridPane.setColumnIndex(targetCircle, 'H' - targetFile);
-            GridPane.setRowIndex(targetCircle, targetRank - 1);
+            GridPane.setRowIndex(targetCircle, targetRank);
+
+            targetCircle.setOnMouseClicked(event -> {
+                if (myTurn) {
+                    sendMove(move);
+                    wait = false;
+                }
+            });
 
             gridPane.getChildren().add(targetCircle);
             highlightedCircles.add(targetCircle);
         }
     }
 
-
-
+    private void clearHighlightedMoves(GridPane gridPane) {
+        for (Circle circle : highlightedCircles) {
+            gridPane.getChildren().remove(circle);
+        }
+        highlightedCircles.clear();
+    }
 
     private ImageView createPieceImageView(Piece piece) {
         // Esempio di creazione di ImageView per i pezzi
@@ -264,13 +292,25 @@ public class ClientPlayer extends Application {
         return imageView;
     }
 
+    private void sendNickname(String nickname) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
+        outputStream.writeObject(nickname);
+        outputStream.flush();
+    }
 
     public Color getColor() {
         return color;
     }
 
     public void sendMove(Move move) {
-        // Logica per inviare una mossa al server
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
+            outputStream.writeObject(move);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Gestione dell'errore di invio della mossa al server
+        }
     }
 
     public void receiveUpdate() {
