@@ -1,13 +1,10 @@
 package com.chess.chessgame;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Pawn extends Piece {
     public Pawn(Color color) { super(color); }
 
     @Override
-    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
 
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
@@ -20,6 +17,9 @@ public class Pawn extends Piece {
         Square nextSquare = board.getSquare(currentRank + direction, currentFile);
 
         if (nextSquare != null && !board.isOccupied(nextSquare)) {
+            if (kingSquare.getPiece().Check(board, kingSquare)) {
+
+            }
             addAvailableMoves(new Move(currentSquare, nextSquare));
 
             // Movimento in avanti di due caselle se è il primo movimento del pedone

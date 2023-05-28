@@ -1,13 +1,10 @@
 package com.chess.chessgame;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Queen extends Piece {
     public Queen(Color color) { super(color); }
 
     @Override
-    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
 
         // Calcola le mosse orizzontali e verticali
         getHorizontalVerticalMoves(board, currentSquare, 1, 0); // Verso destra
@@ -29,7 +26,7 @@ public class Queen extends Piece {
         int targetRank = currentRank + rankOffset;
         char targetFile = (char) (currentFile + fileOffset);
 
-        while (board.isValidSquare(targetRank, targetFile)) {
+        while (board.isValidSquare(targetRank - 1, targetFile)) {
             Square targetSquare = board.getSquare(targetRank, targetFile);
 
             if (board.isOccupiedByOpponent(targetSquare, getColor())) {
@@ -54,7 +51,7 @@ public class Queen extends Piece {
         int targetRank = currentRank + rankOffset;
         char targetFile = (char) (currentFile + fileOffset);
 
-        while (board.isValidSquare(targetRank, targetFile)) {
+        while (board.isValidSquare(targetRank - 1, targetFile)) {
             Square targetSquare = board.getSquare(targetRank, targetFile);
 
             if (board.isOccupiedByOpponent(targetSquare, getColor())) {

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Chessboard implements Serializable {
-    private Square[][] squares;
+    private final Square[][] squares;
 
     public Chessboard() {
         squares = new Square[8][8];
@@ -24,7 +24,7 @@ public class Chessboard implements Serializable {
             }
         }
         // Posizione iniziale dei pezzi bianchi
-        squares[0]['A' - 'A'].setPiece(new Rook(Color.WHITE));
+        squares[0][0].setPiece(new Rook(Color.WHITE));
         squares[0]['B' - 'A'].setPiece(new Knight(Color.WHITE));
         squares[0]['C' - 'A'].setPiece(new Bishop(Color.WHITE));
         squares[0]['D' - 'A'].setPiece(new Queen(Color.WHITE));
@@ -39,7 +39,7 @@ public class Chessboard implements Serializable {
         }
 
 // Posizione iniziale dei pezzi neri
-        squares[7]['A' - 'A'].setPiece(new Rook(Color.BLACK));
+        squares[7][0].setPiece(new Rook(Color.BLACK));
         squares[7]['B' - 'A'].setPiece(new Knight(Color.BLACK));
         squares[7]['C' - 'A'].setPiece(new Bishop(Color.BLACK));
         squares[7]['D' - 'A'].setPiece(new Queen(Color.BLACK));
@@ -89,12 +89,19 @@ public class Chessboard implements Serializable {
         return false;
     }
 
+    public boolean isOccupiedKing(Square square, Color color) {
+        Piece pie = square.getPiece();
+        return pie == null || pie.getColor() != color;
+    }
+
     public void movePiece(Move move) {
         Piece piece = move.getPiece();
-        squares[move.getFromSquare().getRank() - 1][move.getFromSquare().getFile() - 'A'].clearPiece();
-        if (isOccupied(squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A']) && isOccupiedByOpponent(squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'], move.getToSquare().getPiece().getColor())) {
-            squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'].clearPiece();
+        squares[move.fromSquare().getRank() - 1][move.fromSquare().getFile() - 'A'].clearPiece();
+        if (isOccupied(squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A']) && isOccupiedByOpponent(squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'], move.toSquare().getPiece().getColor())) {
+            squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].clearPiece();
         }
-        squares[move.getToSquare().getRank() - 1][move.getToSquare().getFile() - 'A'].setPiece(piece);
+        squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].setPiece(piece);
     }
+
+
 }

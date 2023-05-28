@@ -8,12 +8,12 @@ import java.util.List;
 
 public class Server {
     private ServerSocket serverSocket;
-    private List<ClientHandler> clients;
-    private List<Socket> waitingClients;
+    private final List<ClientHandler> clients;
+    private final List<Socket> waitingClients;
 
     public Server() {
-        clients = new ArrayList<ClientHandler>();
-        waitingClients = new ArrayList<Socket>();
+        clients = new ArrayList<>();
+        waitingClients = new ArrayList<>();
     }
 
     public void start() {

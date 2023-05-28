@@ -7,7 +7,7 @@ public class King extends Piece {
     public King(Color color) { super(color); }
 
     @Override
-    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
 
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
@@ -26,83 +26,80 @@ public class King extends Piece {
 
     private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file) {
         Square targetSquare = board.getSquare(rank, file);
-        if (targetSquare != null && (!board.isOccupied(targetSquare) || board.isOccupiedByOpponent(targetSquare, getColor()))) {
+        if (targetSquare != null && board.isOccupiedKing(targetSquare, getColor())) {
             List<Square> threats = getThreats(board, targetSquare);
             if (!threats.contains(targetSquare)) {
                 addAvailableMoves(new Move(currentSquare, targetSquare));
             }
         }
     }
+
+    public boolean Check(Chessboard board, Square kingSquare) {
+        List<Square> threats = getThreats(board, kingSquare);
+        return threats.contains(kingSquare);
+    }
+    
     private List<Square> getThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
-        Color kingColor = getColor();
 
         // Ottieni le minacce dai pedoni avversari
-        threats.addAll(getOpponentPawnThreats(board, kingSquare, kingColor));
+        threats.addAll(getOpponentPawnThreats(board, kingSquare));
 
         // Ottieni le minacce dagli alfieri e dai pezzi della regina avversaria
-        threats.addAll(getOpponentBishopQueenThreats(board, kingSquare, kingColor));
+        threats.addAll(getOpponentBishopQueenThreats(board, kingSquare));
 
         // Ottieni le minacce dalle torri e dai pezzi della regina avversaria
-        threats.addAll(getOpponentRookQueenThreats(board, kingSquare, kingColor));
+        threats.addAll(getOpponentRookQueenThreats(board, kingSquare));
 
         // Ottieni le minacce dai cavalli avversari
-        threats.addAll(getOpponentKnightThreats(board, kingSquare, kingColor));
+        threats.addAll(getOpponentKnightThreats(board, kingSquare));
 
         // Ottieni le minacce dal re avversario
-        threats.addAll(getOpponentKingThreats(board, kingSquare, kingColor));
+        threats.addAll(getOpponentKingThreats(board, kingSquare));
 
         return threats;
     }
 
-    private List<Square> getOpponentPawnThreats(Chessboard board, Square kingSquare, Color kingColor) {
+    private List<Square> getOpponentPawnThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
-        int direction = (kingColor == Color.WHITE) ? -1 : 1; // Direzione dei pedoni avversari
+        int direction = (getColor() == Color.WHITE) ? -1 : 1; // Direzione dei pedoni avversari
 
         // Calcola le caselle in cui i pedoni avversari possono minacciare il re
         Square leftThreat = board.getSquare(kingSquare.getRank() + direction, (char) (kingSquare.getFile() - 1));
         Square rightThreat = board.getSquare(kingSquare.getRank() + direction, (char) (kingSquare.getFile() + 1));
 
         // Verifica se i pedoni avversari minacciano il re
-        if (leftThreat != null && board.isOccupiedByOpponent(leftThreat, kingColor) && leftThreat.getPiece() instanceof Pawn) {
-            threats.add(leftThreat);
+        if (leftThreat != null && board.isOccupiedByOpponent(leftThreat, getColor()) && leftThreat.getPiece() instanceof Pawn) {
+            threats.add(kingSquare);
         }
-        if (rightThreat != null && board.isOccupiedByOpponent(rightThreat, kingColor) && rightThreat.getPiece() instanceof Pawn) {
-            threats.add(rightThreat);
+        if (rightThreat != null && board.isOccupiedByOpponent(rightThreat, getColor()) && rightThreat.getPiece() instanceof Pawn) {
+            threats.add(kingSquare);
         }
 
         return threats;
     }
 
-    private List<Square> getOpponentBishopQueenThreats(Chessboard board, Square kingSquare, Color kingColor) {
-        List<Square> threats = new ArrayList<>();
-
+    private List<Square> getOpponentBishopQueenThreats(Chessboard board, Square kingSquare) {
         // Calcola le caselle in cui gli alfieri e i pezzi della regina avversaria possono minacciare il re
-        threats.addAll(getThreatsInDiagonalDirections(board, kingSquare, kingColor));
-
-        return threats;
+        return new ArrayList<>(getThreatsInDiagonalDirections(board, kingSquare));
     }
 
-    private List<Square> getOpponentRookQueenThreats(Chessboard board, Square kingSquare, Color kingColor) {
-        List<Square> threats = new ArrayList<>();
-
+    private List<Square> getOpponentRookQueenThreats(Chessboard board, Square kingSquare) {
         // Calcola le caselle in cui le torri e i pezzi della regina avversaria possono minacciare il re
-        threats.addAll(getThreatsInHorizontalAndVerticalDirections(board, kingSquare, kingColor));
-
-        return threats;
+        return new ArrayList<>(getThreatsInHorizontalAndVerticalDirections(board, kingSquare));
     }
 
-    private List<Square> getOpponentKnightThreats(Chessboard board, Square kingSquare, Color kingColor) {
+    private List<Square> getOpponentKnightThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
 
         // Calcola le caselle in cui i cavalli avversari possono minacciare il re
         for (Square square : board.getAllSquares()) {
             Piece piece = square.getPiece();
-            if (piece != null && piece.getColor() != kingColor && piece instanceof Knight) {
+            if (piece != null && piece.getColor() != getColor() && piece instanceof Knight) {
                 List<Move> knightMoves = piece.getAvailableMoves();
                 for (Move move: knightMoves) {
-                    if (move.getToSquare().equals(kingSquare)) {
-                        threats.add(square);
+                    if (move.toSquare().equals(kingSquare)) {
+                        threats.add(kingSquare);
                     }
                 }
             }
@@ -111,17 +108,17 @@ public class King extends Piece {
         return threats;
     }
 
-    private List<Square> getOpponentKingThreats(Chessboard board, Square kingSquare, Color kingColor) {
+    private List<Square> getOpponentKingThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
 
         // Calcola le caselle in cui il re avversario può minacciare il re
         for (Square square : board.getAllSquares()) {
             Piece piece = square.getPiece();
-            if (piece != null && piece.getColor() != kingColor && piece instanceof King) {
+            if (piece != null && piece.getColor() != getColor() && piece instanceof King) {
                 List<Move> kingMoves = piece.getAvailableMoves();
                 for (Move move: kingMoves) {
-                    if (move.getToSquare().equals(kingSquare)) {
-                        threats.add(square);
+                    if (move.toSquare().equals(kingSquare)) {
+                        threats.add(kingSquare);
                     }
                 }
             }
@@ -131,15 +128,18 @@ public class King extends Piece {
     }
 
     // Metodo ausiliario per ottenere le minacce in direzioni diagonali (alfieri e regine)
-    private List<Square> getThreatsInDiagonalDirections(Chessboard board, Square kingSquare, Color kingColor) {
+    private List<Square> getThreatsInDiagonalDirections(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
         int[] directions = { -1, 1 }; // Direzioni diagonali (alto-sinistra, alto-destra, basso-sinistra, basso-destra)
 
-        for (int dx : directions) {
+
+        for (int dx : directions){
             for (int dy : directions) {
+                int targetRank = kingSquare.getRank();
+                char targetFile = kingSquare.getFile();
                 for (char i = 'A'; i <= 'H'; i++) {
-                    int targetRank = kingSquare.getRank() + (i * dy);
-                    char targetFile = (char) (kingSquare.getFile() + (i * dx));
+                    targetRank += dy;
+                    targetFile = (char) (targetFile + dx);
                     Square targetSquare = board.getSquare(targetRank, targetFile);
 
                     if (targetSquare == null) {
@@ -148,10 +148,10 @@ public class King extends Piece {
 
                     Piece piece = targetSquare.getPiece();
                     if (piece != null) {
-                        if (piece.getColor() == kingColor) {
+                        if (piece.getColor() == getColor()) {
                             break; // Pezzo alleato, interrompi il ciclo
                         } else if (piece instanceof Bishop || piece instanceof Queen) {
-                            threats.add(targetSquare);
+                            threats.add(kingSquare);
                             break; // Trovato un pezzo avversario che minaccia il re, interrompi il ciclo
                         } else {
                             break; // Altri tipi di pezzi avversari, interrompi il ciclo
@@ -165,7 +165,7 @@ public class King extends Piece {
     }
 
     // Metodo ausiliario per ottenere le minacce in direzioni orizzontali e verticali (torri e regine)
-    private List<Square> getThreatsInHorizontalAndVerticalDirections(Chessboard board, Square kingSquare, Color kingColor) {
+    private List<Square> getThreatsInHorizontalAndVerticalDirections(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
         int[] directions = { -1, 1 }; // Direzioni orizzontali e verticali (sinistra, destra, alto, basso)
 
@@ -177,17 +177,17 @@ public class King extends Piece {
             while (targetSquare != null) {
                 Piece piece = targetSquare.getPiece();
                 if (piece != null) {
-                    if (piece.getColor() == kingColor) {
+                    if (piece.getColor() == getColor()) {
                         break; // Pezzo alleato, interrompi il ciclo
                     } else if (piece instanceof Rook || piece instanceof Queen) {
-                        threats.add(targetSquare);
+                        threats.add(kingSquare);
                         break; // Trovato un pezzo avversario che minaccia il re, interrompi il ciclo
                     } else {
                         break; // Altri tipi di pezzi avversari, interrompi il ciclo
                     }
                 }
 
-                targetFile += dx;
+                targetFile = (char) (targetFile + dx);
                 targetSquare = board.getSquare(targetRank, targetFile);
             }
         }
@@ -200,10 +200,10 @@ public class King extends Piece {
             while (targetSquare != null) {
                 Piece piece = targetSquare.getPiece();
                 if (piece != null) {
-                    if (piece.getColor() == kingColor) {
+                    if (piece.getColor() == getColor()) {
                         break; // Pezzo alleato, interrompi il ciclo
                     } else if (piece instanceof Rook || piece instanceof Queen) {
-                        threats.add(targetSquare);
+                        threats.add(kingSquare);
                         break; // Trovato un pezzo avversario che minaccia il re, interrompi il ciclo
                     } else {
                         break; // Altri tipi di pezzi avversari, interrompi il ciclo
@@ -218,4 +218,3 @@ public class King extends Piece {
         return threats;
     }
 }
-

@@ -7,7 +7,7 @@ import java.util.List;
 public abstract class Piece implements Serializable {
     private Color color;
     private List<Move> availableMoves = new ArrayList<>();
-    public abstract void calculatePossibleMoves(Chessboard board, Square currentSquare);
+    public abstract void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare);
 
     public Piece(Color color) {
         this.color = color;

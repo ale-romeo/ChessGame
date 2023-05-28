@@ -12,7 +12,7 @@ public class Knight extends Piece {
     public Knight(Color color) { super(color); }
 
     @Override
-    public void calculatePossibleMoves(Chessboard board, Square currentSquare) {
+    public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
 
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();

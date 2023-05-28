@@ -6,11 +6,9 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -18,12 +16,15 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import org.bson.Document;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Objects;
 
 
 public class ClientPlayer extends Application {
@@ -33,12 +34,12 @@ public class ClientPlayer extends Application {
     private String serverAddress;
     private int serverPort;
     private Chessboard chessboard;
-    private ObjectInputStream inputStream;
-    private List<Circle> highlightedCircles = new ArrayList<>();
+    private Square kingSquare;
+    private final List<Circle> highlightedCircles = new ArrayList<>();
     private List<Move> posMoves = new ArrayList<>();
-    public boolean myTurn;
-    public boolean gameStatus = true;
-    public boolean wait;
+    private boolean myTurn, running = true;
+    private volatile boolean wait, newGame;
+    private final TableView<ScoreboardEntry> scoreboardTable =new TableView<>();
 
 
     public static void main(String[] args) {
@@ -47,7 +48,7 @@ public class ClientPlayer extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        readConfigFromXML("config.xml");
+        readConfigFromXML();
         primaryStage.setTitle("Benvenuto");
 
         // Creazione dei controlli
@@ -58,9 +59,10 @@ public class ClientPlayer extends Application {
         // Azione del pulsante "Inizia partita"
         startButton.setOnAction(event -> {
             nickname = nicknameTextField.getText();
-            Label waitingLabel = new Label("In attesa di un avversario...");
-            // Avvia il gioco o altre azioni in base alla logica del tuo programma
-            initGame(primaryStage, nickname);
+            if (!Objects.equals(nickname, "")) {
+                // Avvia il gioco o altre azioni in base alla logica del tuo programma
+                startThread(primaryStage);
+            }
         });
 
         // Creazione del layout
@@ -76,50 +78,149 @@ public class ClientPlayer extends Application {
         primaryStage.show();
     }
 
-    private void initGame(Stage primaryStage, String nickname) {
-        Thread gameThread = new Thread(() -> {
-            try {
-                this.serverSocket = new Socket(serverAddress, serverPort);
-                sendNickname(nickname);
-                this.color = receiveColor();
-
-                playGame(primaryStage);
-            } catch (IOException e) {
-                e.printStackTrace();
-                // Gestione dell'errore di connessione
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    private void startThread(Stage primaryStage) {
+        Thread gameThread = new Thread(() -> initGame(primaryStage));
         gameThread.start();
     }
 
-    private void playGame(Stage primaryStage) {
-            while (gameStatus) {
-                try {
-                    this.gameStatus = receiveStatus();
-                    this.chessboard = receiveChessboard();
-                    this.myTurn = receiveTurn();
-                    Platform.runLater(() -> {
-                        GridPane gridPane = createChessboard();
+    private void initGame(Stage primaryStage) {
+        try {
+            this.serverSocket = new Socket(serverAddress, serverPort);
+            Platform.runLater(() -> {
+                Label waitingLabel = new Label("In attesa di un avversario...");
+                VBox waitingBox = new VBox(10);
+                waitingBox.setPadding(new Insets(10));
+                waitingBox.getChildren().add(waitingLabel);
+                primaryStage.setTitle("Chess Game - " + nickname + " in attesa");
+                primaryStage.setScene(new Scene(waitingBox, 300, 200));
+            });
+            sendNickname(nickname);
+            this.color = receiveColor();
 
-                        primaryStage.setTitle("Chess Game - " + nickname);
-                        primaryStage.setScene(new Scene(gridPane, 450, 450));
-                        displayChessboardInGame(gridPane);
-                    });
-                    if (myTurn) {
-                        while (wait);
-                        wait = true;
-                    }
-                } catch (IOException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+            playGame(primaryStage);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Gestione dell'errore di connessione
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void playGame(Stage primaryStage) {
+        while (running) {
+            try {
+                this.running = receiveStatus();
+                if (!running) {
+                    break;
                 }
+                this.chessboard = receiveChessboard();
+                if (this.chessboard == null) {
+                    break;
+                }
+                this.myTurn = receiveTurn();
+                Platform.runLater(() -> {
+                    GridPane gridPane = createChessboard();
+
+                    primaryStage.setTitle("Chess Game - " + nickname + " - " + this.color);
+                    primaryStage.setScene(new Scene(gridPane, 450, 450));
+                    displayChessboardInGame(gridPane);
+                });
+                if (myTurn) {
+                    while (wait) Thread.onSpinWait();
+                    wait = true;
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Platform.runLater(() -> {
+            Label victoryLabel = new Label("Hai vinto!");
+            Button scoreboardButton = new Button("Visualizza classifica");
+            Button newGameButton = new Button("Nuova Partita");
+
+            scoreboardButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                showScoreboard(primaryStage);
+            });
+            // Azione del pulsante "Nuova partita"
+            newGameButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                newGame = true;
+            });
+
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+            primaryStage.setTitle("Vittoria");
+            primaryStage.setScene(new Scene(vbox, 300, 200));
+        });
+        while (!newGame) Thread.onSpinWait();
+        newGame = false;
+            try {
+                this.serverSocket.close();
+                initGame(primaryStage);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
     }
 
-    private void readConfigFromXML(String filePath) {
+    private void showScoreboard(Stage primaryStage) {
+        try {
+            List<Document> scoreboardDocuments = receiveScoreboard();
+            List<ScoreboardEntry> scoreboardEntries = new ArrayList<>();
+            for (Document document : scoreboardDocuments) {
+                String nickname = document.getString("nickname");
+                int wins = document.getInteger("wins");
+                int losses = document.getInteger("losses");
+
+                scoreboardEntries.add(new ScoreboardEntry(nickname, wins, losses));
+            }
+            // Aggiorna la TableView con i dati della scoreboard
+            scoreboardTable.getItems().setAll(scoreboardEntries);
+            //this.scoreboard = receiveScoreboard();
+            Platform.runLater(() -> {
+                Label scoreLabel = new Label("Classifica:");
+
+                // Creazione delle colonne della scoreboard
+                TableColumn<ScoreboardEntry, String> nicknameColumn = new TableColumn<>("Nickname");
+                TableColumn<ScoreboardEntry, Integer> winsColumn = new TableColumn<>("Wins");
+                TableColumn<ScoreboardEntry, Integer> lossesColumn = new TableColumn<>("Losses");
+
+                // Associazione delle proprietà dei dati alle colonne
+                nicknameColumn.setCellValueFactory(new PropertyValueFactory<>("nickname"));
+                winsColumn.setCellValueFactory(new PropertyValueFactory<>("wins"));
+                lossesColumn.setCellValueFactory(new PropertyValueFactory<>("losses"));
+
+                // Aggiungi le colonne alla TableView
+                scoreboardTable.getColumns().add(nicknameColumn);
+                scoreboardTable.getColumns().add(winsColumn);
+                scoreboardTable.getColumns().add(lossesColumn);
+
+                nicknameColumn.setPrefWidth(90);
+                winsColumn.setPrefWidth(90);
+                lossesColumn.setPrefWidth(90);
+                scoreboardTable.autosize();
+
+                // Aggiungi la TableView alla scena o al layout desiderato
+
+                VBox scoreBox = new VBox(10);
+                scoreBox.setPadding(new Insets(10));
+                scoreBox.getChildren().addAll(scoreLabel, scoreboardTable);
+                primaryStage.setTitle("Chess Game - Classifica");
+                primaryStage.setScene(new Scene(scoreBox, 300, 200));
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Gestione dell'errore di connessione
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void readConfigFromXML() {
         ConfigReader configReader = new ConfigReader();
-        configReader.readConfigFromXML(filePath);
+        configReader.readConfigFromXML("config.xml");
         this.serverAddress = configReader.getServerAddress();
         this.serverPort = configReader.getServerPort();
     }
@@ -131,17 +232,24 @@ public class ClientPlayer extends Application {
 
     private boolean receiveTurn() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
-        return (Color) serverInputStream.readObject() == this.color;
+        return serverInputStream.readObject() == this.color;
     }
 
     private boolean receiveStatus() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
-        return ((String) serverInputStream.readObject()).equals("Running");
+        String gameStatus = (String) serverInputStream.readObject();
+        return (gameStatus).equals("Running");
     }
 
     private Chessboard receiveChessboard() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
-        return (Chessboard) serverInputStream.readObject();
+        Object receivedObject = serverInputStream.readObject();
+
+        if (receivedObject instanceof Chessboard) {
+            return (Chessboard) receivedObject;
+        } else {
+            return null;
+        }
     }
 
     private GridPane createChessboard() {
@@ -157,7 +265,7 @@ public class ClientPlayer extends Application {
             gridPane.add(label, 'H' - file, 9);
         }
 
-        // Inserimento dei numeri accanto ad ogni riga
+        // Inserimento dei numeri accanto a ogni riga
         for (int rank = 1; rank <= 8; rank++) {
             Label label = new Label(String.valueOf(rank));
             label.setStyle("-fx-font-weight: bold;");
@@ -167,7 +275,7 @@ public class ClientPlayer extends Application {
         // Creazione delle caselle della scacchiera come rettangoli colorati
         for (int rank = 1; rank <= 8; rank++) {
             for (char file = 'A'; file <= 'H'; file++) {
-                Rectangle square = new Rectangle(50, 50, (rank + ('H' - file)) % 2 == 0 ? javafx.scene.paint.Color.WHITE : javafx.scene.paint.Color.LIGHTGRAY);
+                Rectangle square = new Rectangle(50, 50, (rank + ('H' - file)) % 2 != 0 ? javafx.scene.paint.Color.WHITE : javafx.scene.paint.Color.LIGHTGRAY);
                 gridPane.add(square, 'H' - file, rank);
             }
         }
@@ -176,35 +284,40 @@ public class ClientPlayer extends Application {
     }
 
     private void displayChessboardInGame(GridPane gridPane) {
+        List<Square> allSquares = this.chessboard.getAllSquares();
+        for (Square square : allSquares) {
+            if (square.getPiece() instanceof King && square.getPiece().getColor() == this.color) {
+                kingSquare = square;
+                break;
+            }
+        }
+
         // Posizionamento dei pezzi sulla scacchiera grafica
-        for (char file = 'A'; file <= 'H'; file++) {
-            for (int rank = 1; rank <= 8; rank++) {
-                Square currSquare = this.chessboard.getSquare(rank, file);
-                Piece piece = currSquare.getPiece();
-                if (piece != null) {
-                    // Creazione del componente grafico per il pezzo (ad esempio, ImageView)
-                    ImageView pieceImageView = createPieceImageView(piece);
+        for (Square square : allSquares) {
+            Piece piece = square.getPiece();
+            if (piece != null) {
+                // Creazione del componente grafico per il pezzo (ad esempio, ImageView)
+                ImageView pieceImageView = createPieceImageView(piece);
 
-                    if (piece.getColor() == this.color){
-                        pieceImageView.setOnMouseClicked(event -> {
-                            // Nuovo pezzo selezionato
-                            clearHighlightedMoves(gridPane);
-                            posMoves.clear();
-                            // Ottenere le possibili mosse del pezzo
-                            piece.clearAvailableMoves();
-                            piece.calculatePossibleMoves(this.chessboard, currSquare);
-                            posMoves = piece.getAvailableMoves();
-                            if (posMoves != null) {
-                                // Mostrare le possibili mosse (ad esempio, evidenziando le caselle)
-                                highlightPossibleMoves(gridPane);
-                            }
-                        });
+                if (piece.getColor() == this.color){
+                    pieceImageView.setOnMouseClicked(event -> {
+                        // Nuovo pezzo selezionato
+                        clearHighlightedMoves(gridPane);
+                        posMoves.clear();
+                        // Ottenere le possibili mosse del pezzo
+                        piece.clearAvailableMoves();
+                        piece.calculatePossibleMoves(this.chessboard, square, kingSquare);
+                        posMoves = piece.getAvailableMoves();
+                        if (posMoves != null) {
+                            // Mostrare le possibili mosse (ad esempio, evidenziando le caselle)
+                            highlightPossibleMoves(gridPane);
+                        }
+                    });
 
-                    }
-
-                    // Posizionamento del componente grafico nel GridPane
-                    gridPane.add(pieceImageView, 'H' - file, rank);
                 }
+
+                // Posizionamento del componente grafico nel GridPane
+                gridPane.add(pieceImageView, 'H' - square.getFile(), square.getRank());
             }
         }
     }
@@ -213,8 +326,8 @@ public class ClientPlayer extends Application {
         clearHighlightedMoves(gridPane);
 
         for (Move move : posMoves) {
-            int targetRank = move.getToSquare().getRank();
-            char targetFile = move.getToSquare().getFile();
+            int targetRank = move.toSquare().getRank();
+            char targetFile = move.toSquare().getFile();
 
             Circle targetCircle = new Circle(8, javafx.scene.paint.Color.LIGHTGREEN);
             GridPane.setHalignment(targetCircle, HPos.CENTER); // Centra il cerchio orizzontalmente
@@ -242,7 +355,7 @@ public class ClientPlayer extends Application {
     }
 
     private ImageView createPieceImageView(Piece piece) {
-        // Esempio di creazione di ImageView per i pezzi
+        // Esempio di creazione d'ImageView per i pezzi
         ImageView imageView = new ImageView();
 
         // Imposta l'immagine del pezzo in base al tipo e al colore
@@ -309,17 +422,15 @@ public class ClientPlayer extends Application {
             outputStream.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            // Gestione dell'errore di invio della mossa al server
+            // Gestione dell'errore d'invio della mossa al server
         }
     }
 
-    public void receiveUpdate() {
-        // Logica per ricevere l'aggiornamento dal server
+    private List<Document> receiveScoreboard() throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (List<Document>) inputStream.readObject();
     }
 
-    public void receiveGameOver() {
-        // Logica per ricevere la notifica di fine gioco dal server
-    }
 
     public void disconnect() {
         // Logica per disconnettersi dal server
