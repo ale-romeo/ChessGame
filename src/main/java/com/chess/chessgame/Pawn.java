@@ -34,6 +34,8 @@ public class Pawn extends Piece {
                 temp = new Knight(oppColor);
             } else if (nextSquare.getPiece() instanceof Bishop) {
                 temp = new Bishop(oppColor);
+            } else if (nextSquare.getPiece() instanceof King) {
+                temp = new King(oppColor);
             }
             board.movePiece(new Move(currentSquare, nextSquare));
             if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -59,6 +61,8 @@ public class Pawn extends Piece {
                         temp = new Knight(oppColor);
                     } else if (doubleMoveSquare.getPiece() instanceof Bishop) {
                         temp = new Bishop(oppColor);
+                    } else if (doubleMoveSquare.getPiece() instanceof King) {
+                        temp = new King(oppColor);
                     }
                     board.movePiece(new Move(currentSquare, doubleMoveSquare));
                     if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -93,6 +97,8 @@ public class Pawn extends Piece {
                 temp = new Knight(oppColor);
             } else if (captureSquare1.getPiece() instanceof Bishop) {
                 temp = new Bishop(oppColor);
+            } else if (captureSquare1.getPiece() instanceof King) {
+                temp = new King(oppColor);
             }
             board.movePiece(new Move(currentSquare, captureSquare1));
             if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -121,6 +127,8 @@ public class Pawn extends Piece {
                 temp = new Knight(oppColor);
             } else if (captureSquare2.getPiece() instanceof Bishop) {
                 temp = new Bishop(oppColor);
+            } else if (captureSquare2.getPiece() instanceof King) {
+                temp = new King(oppColor);
             }
             board.movePiece(new Move(currentSquare, captureSquare2));
             if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {

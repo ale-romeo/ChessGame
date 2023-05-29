@@ -32,6 +32,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -59,6 +61,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -97,6 +101,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -124,6 +130,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -162,6 +170,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -189,6 +199,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -227,6 +239,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
@@ -254,6 +268,8 @@ public class Rook extends Piece {
                     temp = new Knight(oppColor);
                 } else if (nextSquare.getPiece() instanceof Bishop) {
                     temp = new Bishop(oppColor);
+                } else if (nextSquare.getPiece() instanceof King) {
+                    temp = new King(oppColor);
                 }
                 board.movePiece(new Move(currentSquare, nextSquare));
                 if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {

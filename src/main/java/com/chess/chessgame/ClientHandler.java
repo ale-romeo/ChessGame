@@ -13,6 +13,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+import org.bson.io.BsonOutput;
 
 import static com.mongodb.client.model.Filters.all;
 import static com.mongodb.client.model.Filters.eq;
@@ -151,20 +152,21 @@ public class ClientHandler implements Runnable {
         Square kingSquare = null;
 
         for (Square square : allSquares) {
-            if (square.getPiece() instanceof King && (square.getPiece().getColor() == (Color.WHITE)) == isWhiteTurn) {
+            if (square.getPiece() instanceof King && (square.getPiece().getColor() == (Color.WHITE)) == !isWhiteTurn) {
                 kingSquare = square;
                 break;
             }
         }
 
         for (Square square : allSquares) {
-            if (square.getPiece() != null && (square.getPiece().getColor() == (Color.WHITE)) == isWhiteTurn) {
+            if (square.getPiece() != null && square.getPiece().getColor() == kingSquare.getPiece().getColor()) {
                 square.getPiece().calculatePossibleMoves(this.chessboard, square, kingSquare);
                 allAvailableMoves.addAll(square.getPiece().getAvailableMoves());
             }
         }
-
+        System.out.println(kingSquare.getRank()+" "+allAvailableMoves + " " + allAvailableMoves.isEmpty());
         if (allAvailableMoves.isEmpty() && ((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
+            System.out.println(" percio");
             status = (!isWhiteTurn ? "Black" : "White") + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1);

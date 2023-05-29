@@ -39,6 +39,8 @@ public class Knight extends Piece {
                         temp = new Knight(oppColor);
                     } else if (targetSquare.getPiece() instanceof Bishop) {
                         temp = new Bishop(oppColor);
+                    } else if (targetSquare.getPiece() instanceof King) {
+                        temp = new King(oppColor);
                     }
                     board.movePiece(new Move(currentSquare, targetSquare));
                     if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
