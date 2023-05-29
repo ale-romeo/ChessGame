@@ -13,23 +13,48 @@ public class King extends Piece {
         char currentFile = currentSquare.getFile();
 
         // Calcola le mosse nelle 8 direzioni intorno al re
-        addMoveIfValid(board, currentSquare, currentRank + 1, currentFile); // Movimento verso l'alto
-        addMoveIfValid(board, currentSquare, currentRank - 1, currentFile); // Movimento verso il basso
-        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile + 1)); // Movimento verso destra
-        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile - 1)); // Movimento verso sinistra
-        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile + 1)); // Movimento in alto a destra
-        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile - 1)); // Movimento in alto a sinistra
-        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile + 1)); // Movimento in basso a destra
-        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile - 1)); // Movimento in basso a sinistra
+        addMoveIfValid(board, currentSquare, currentRank + 1, currentFile, KingSquare); // Movimento verso l'alto
+        addMoveIfValid(board, currentSquare, currentRank - 1, currentFile, KingSquare); // Movimento verso il basso
+        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile + 1), KingSquare); // Movimento verso destra
+        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile - 1), KingSquare); // Movimento verso sinistra
+        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile + 1), KingSquare); // Movimento in alto a destra
+        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile - 1), KingSquare); // Movimento in alto a sinistra
+        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile + 1), KingSquare); // Movimento in basso a destra
+        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile - 1), KingSquare); // Movimento in basso a sinistra
 
     }
 
-    private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file) {
+    private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file, Square KingSquare) {
         Square targetSquare = board.getSquare(rank, file);
         if (targetSquare != null && board.isOccupiedKing(targetSquare, getColor())) {
             List<Square> threats = getThreats(board, targetSquare);
             if (!threats.contains(targetSquare)) {
-                addAvailableMoves(new Move(currentSquare, targetSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (targetSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (targetSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (targetSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (targetSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (targetSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, targetSquare));
+                if (!((King) targetSquare.getPiece()).Check(board, targetSquare)) {
+                    addAvailableMoves(new Move(currentSquare, targetSquare));
+                }
+                board.movePiece(new Move(targetSquare, currentSquare));
+                if (temp != null) {
+                    targetSquare.setPiece(temp);
+                }
             }
         }
     }
@@ -62,7 +87,7 @@ public class King extends Piece {
 
     private List<Square> getOpponentPawnThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
-        int direction = (getColor() == Color.WHITE) ? -1 : 1; // Direzione dei pedoni avversari
+        int direction = (getColor() != Color.WHITE) ? -1 : 1; // Direzione dei pedoni avversari
 
         // Calcola le caselle in cui i pedoni avversari possono minacciare il re
         Square leftThreat = board.getSquare(kingSquare.getRank() + direction, (char) (kingSquare.getFile() - 1));
@@ -92,14 +117,18 @@ public class King extends Piece {
     private List<Square> getOpponentKnightThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
 
+        int[] knightOffsets = { -2, -1, 1, 2 };
+
         // Calcola le caselle in cui i cavalli avversari possono minacciare il re
-        for (Square square : board.getAllSquares()) {
-            Piece piece = square.getPiece();
-            if (piece != null && piece.getColor() != getColor() && piece instanceof Knight) {
-                List<Move> knightMoves = piece.getAvailableMoves();
-                for (Move move: knightMoves) {
-                    if (move.toSquare().equals(kingSquare)) {
-                        threats.add(kingSquare);
+        for (int dx : knightOffsets) {
+            for (int dy : knightOffsets) {
+                if (Math.abs(dx) != Math.abs(dy)) {
+                    Square targetSquare = board.getSquare(kingSquare.getRank() + dy, (char) (kingSquare.getFile() + dx));
+                    if (targetSquare != null) {
+                        Piece piece = targetSquare.getPiece();
+                        if (piece != null && piece.getColor() != getColor() && piece instanceof Knight) {
+                            threats.add(kingSquare);
+                        }
                     }
                 }
             }
@@ -111,21 +140,29 @@ public class King extends Piece {
     private List<Square> getOpponentKingThreats(Chessboard board, Square kingSquare) {
         List<Square> threats = new ArrayList<>();
 
-        // Calcola le caselle in cui il re avversario può minacciare il re
-        for (Square square : board.getAllSquares()) {
-            Piece piece = square.getPiece();
-            if (piece != null && piece.getColor() != getColor() && piece instanceof King) {
-                List<Move> kingMoves = piece.getAvailableMoves();
-                for (Move move: kingMoves) {
-                    if (move.toSquare().equals(kingSquare)) {
-                        threats.add(kingSquare);
-                    }
+        // Calcola le caselle adiacenti al re avversario
+        int[][] adjacentSquares = {
+                {-1, -1}, {-1, 0}, {-1, 1},
+                {0, -1},           {0, 1},
+                {1, -1},  {1, 0},  {1, 1}
+        };
+
+        for (int[] offset : adjacentSquares) {
+            int targetRank = kingSquare.getRank() + offset[0];
+            char targetFile = (char) (kingSquare.getFile() + offset[1]);
+            Square targetSquare = board.getSquare(targetRank, targetFile);
+
+            if (targetSquare != null) {
+                Piece piece = targetSquare.getPiece();
+                if (piece != null && piece.getColor() != getColor() && piece instanceof King) {
+                    threats.add(targetSquare);
                 }
             }
         }
 
         return threats;
     }
+
 
     // Metodo ausiliario per ottenere le minacce in direzioni diagonali (alfieri e regine)
     private List<Square> getThreatsInDiagonalDirections(Chessboard board, Square kingSquare) {

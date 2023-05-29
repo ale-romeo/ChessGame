@@ -17,9 +17,59 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
                 break;
             } else {
                 break;
@@ -34,9 +84,59 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
                 break;
             } else {
                 break;
@@ -51,9 +151,59 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
                 break;
             } else {
                 break;
@@ -68,9 +218,59 @@ public class Bishop extends Piece {
             if (nextSquare == null) break;
 
             if (!board.isOccupied(nextSquare)) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
             } else if (board.isOccupiedByOpponent(nextSquare, getColor())) {
-                addAvailableMoves(new Move(currentSquare, nextSquare));
+                Piece temp = null;
+                Color oppColor;
+                if (getColor() == Color.WHITE) {
+                    oppColor = Color.BLACK;
+                } else {
+                    oppColor = Color.WHITE;
+                }
+                if (nextSquare.getPiece() instanceof Pawn) {
+                    temp = new Pawn(oppColor);
+                } else if (nextSquare.getPiece() instanceof Queen) {
+                    temp = new Queen(oppColor);
+                } else if (nextSquare.getPiece() instanceof Rook) {
+                    temp = new Rook(oppColor);
+                } else if (nextSquare.getPiece() instanceof Knight) {
+                    temp = new Knight(oppColor);
+                } else if (nextSquare.getPiece() instanceof Bishop) {
+                    temp = new Bishop(oppColor);
+                }
+                board.movePiece(new Move(currentSquare, nextSquare));
+                if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                    addAvailableMoves(new Move(currentSquare, nextSquare));
+                }
+                board.movePiece(new Move(nextSquare, currentSquare));
+                if (temp != null) {
+                    nextSquare.setPiece(temp);
+                }
                 break;
             } else {
                 break;

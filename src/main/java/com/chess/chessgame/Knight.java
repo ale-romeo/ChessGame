@@ -1,8 +1,4 @@
 package com.chess.chessgame;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public class Knight extends Piece {
     private static final int[][] KNIGHT_MOVES = {
             {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
@@ -26,7 +22,32 @@ public class Knight extends Piece {
             Square targetSquare = board.getSquare(targetRank, targetFile);
             if (targetSquare != null) {
                 if (!board.isOccupied(targetSquare) || board.isOccupiedByOpponent(targetSquare, getColor())) {
-                    addAvailableMoves(new Move(currentSquare, targetSquare));
+                    Piece temp = null;
+                    Color oppColor;
+                    if (getColor() == Color.WHITE) {
+                        oppColor = Color.BLACK;
+                    } else {
+                        oppColor = Color.WHITE;
+                    }
+                    if (targetSquare.getPiece() instanceof Pawn) {
+                        temp = new Pawn(oppColor);
+                    } else if (targetSquare.getPiece() instanceof Queen) {
+                        temp = new Queen(oppColor);
+                    } else if (targetSquare.getPiece() instanceof Rook) {
+                        temp = new Rook(oppColor);
+                    } else if (targetSquare.getPiece() instanceof Knight) {
+                        temp = new Knight(oppColor);
+                    } else if (targetSquare.getPiece() instanceof Bishop) {
+                        temp = new Bishop(oppColor);
+                    }
+                    board.movePiece(new Move(currentSquare, targetSquare));
+                    if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                        addAvailableMoves(new Move(currentSquare, targetSquare));
+                    }
+                    board.movePiece(new Move(targetSquare, currentSquare));
+                    if (temp != null) {
+                        targetSquare.setPiece(temp);
+                    }
                 }
             }
         }

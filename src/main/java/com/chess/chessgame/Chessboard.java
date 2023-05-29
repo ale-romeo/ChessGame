@@ -103,5 +103,4 @@ public class Chessboard implements Serializable {
         squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].setPiece(piece);
     }
 
-
 }

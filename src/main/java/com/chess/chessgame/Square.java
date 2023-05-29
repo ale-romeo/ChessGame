@@ -3,15 +3,13 @@ package com.chess.chessgame;
 import java.io.Serializable;
 
 public class Square implements Serializable {
-    private int rank;
-    private char file;
+    private final int rank;
+    private final char file;
     private Piece piece;
-    private Color color;
 
     public Square(int rank, char file, Color color) {
         this.rank = rank;
         this.file = file;
-        this.color = color;
         this.piece = null;
     }
 
@@ -34,4 +32,5 @@ public class Square implements Serializable {
     public void clearPiece() {
         this.piece = null;
     }
+
 }

@@ -28,10 +28,9 @@ import java.util.Objects;
 
 
 public class ClientPlayer extends Application {
-    private String nickname;
+    private String nickname, serverAddress, end;
     private Color color;
     private Socket serverSocket;
-    private String serverAddress;
     private int serverPort;
     private Chessboard chessboard;
     private Square kingSquare;
@@ -130,6 +129,70 @@ public class ClientPlayer extends Application {
                     wait = true;
                 }
             } catch (IOException | ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (((this.color == Color.WHITE) && Objects.equals(end, "White Won")) || ((this.color == Color.BLACK) && Objects.equals(end, "Black Won"))) {
+            Platform.runLater(() -> {
+                Label victoryLabel = new Label("Hai vinto!");
+                Button scoreboardButton = new Button("Visualizza classifica");
+                Button newGameButton = new Button("Nuova Partita");
+
+                scoreboardButton.setOnAction(event -> {
+                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                    showScoreboard(primaryStage);
+                });
+                // Azione del pulsante "Nuova partita"
+                newGameButton.setOnAction(event -> {
+                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                    newGame = true;
+                });
+
+                VBox vbox = new VBox(10);
+                vbox.setPadding(new Insets(10));
+                vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+                primaryStage.setTitle("Vittoria");
+                primaryStage.setScene(new Scene(vbox, 300, 200));
+            });
+            while (!newGame) Thread.onSpinWait();
+            newGame = false;
+            try {
+                this.serverSocket.close();
+                initGame(primaryStage);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (((this.color == Color.BLACK) && Objects.equals(end, "White Won")) || ((this.color == Color.WHITE) && Objects.equals(end, "Black Won"))) {
+            Platform.runLater(() -> {
+                Label victoryLabel = new Label("Hai perso!");
+                Button scoreboardButton = new Button("Visualizza classifica");
+                Button newGameButton = new Button("Nuova Partita");
+
+                scoreboardButton.setOnAction(event -> {
+                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                    showScoreboard(primaryStage);
+                });
+                // Azione del pulsante "Nuova partita"
+                newGameButton.setOnAction(event -> {
+                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                    newGame = true;
+                });
+
+                VBox vbox = new VBox(10);
+                vbox.setPadding(new Insets(10));
+                vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+                primaryStage.setTitle("Sconfitta");
+                primaryStage.setScene(new Scene(vbox, 300, 200));
+            });
+            while (!newGame) Thread.onSpinWait();
+            newGame = false;
+            try {
+                this.serverSocket.close();
+                initGame(primaryStage);
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -237,8 +300,8 @@ public class ClientPlayer extends Application {
 
     private boolean receiveStatus() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
-        String gameStatus = (String) serverInputStream.readObject();
-        return (gameStatus).equals("Running");
+        end = (String) serverInputStream.readObject();
+        return (end).equals("Running");
     }
 
     private Chessboard receiveChessboard() throws IOException, ClassNotFoundException {

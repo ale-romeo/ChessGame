@@ -13,6 +13,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
+
+import static com.mongodb.client.model.Filters.all;
 import static com.mongodb.client.model.Filters.eq;
 
 
@@ -24,6 +26,7 @@ public class ClientHandler implements Runnable {
     public boolean running = true;
     private String whitePlayer;
     private String blackPlayer;
+    private String status = "Running";
 
     public ClientHandler(Socket clientSocket, Socket waitingClient) {
         Random random = new Random();
@@ -58,6 +61,8 @@ public class ClientHandler implements Runnable {
                 }
             }
             sendGameStatus(White, Black);
+            sendScoreboard(White);
+            sendScoreboard(Black);
 
         } catch (IOException e) {
             System.out.println("Errore durante l'esecuzione del client handler: " + e.getMessage());
@@ -137,14 +142,42 @@ public class ClientHandler implements Runnable {
         Move move = (Move) currentPlayerInputStream.readObject();
 
         this.chessboard.movePiece(move);
-        // if (CheckMate) { running = false }
+        if (CheckMate()) { running = false; }
+    }
+
+    private boolean CheckMate() {
+        List<Square> allSquares = this.chessboard.getAllSquares();
+        List<Move> allAvailableMoves = new ArrayList<>(); // Inizializza la lista delle mosse disponibili
+        Square kingSquare = null;
+
+        for (Square square : allSquares) {
+            if (square.getPiece() instanceof King && (square.getPiece().getColor() == (Color.WHITE)) == isWhiteTurn) {
+                kingSquare = square;
+                break;
+            }
+        }
+
+        for (Square square : allSquares) {
+            if (square.getPiece() != null && (square.getPiece().getColor() == (Color.WHITE)) == isWhiteTurn) {
+                square.getPiece().calculatePossibleMoves(this.chessboard, square, kingSquare);
+                allAvailableMoves.addAll(square.getPiece().getAvailableMoves());
+            }
+        }
+
+        if (allAvailableMoves.isEmpty() && ((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
+            status = (!isWhiteTurn ? "Black" : "White") + " Wins"; // Aggiorna lo stato correttamente
+            writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0);
+            writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1);
+            return true;
+        } else if (allAvailableMoves.isEmpty() && !((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
+            status = "Stalemate"; // Aggiorna lo stato correttamente
+            return true;
+        }
+
+        return false;
     }
 
     private void sendGameStatus(Socket whiteSocket, Socket blackSocket) throws IOException {
-        String status = "Running";
-        if (!running) {
-            status = "GameOver";
-        }
         ObjectOutputStream whiteOutputStream = new ObjectOutputStream(whiteSocket.getOutputStream());
         whiteOutputStream.writeObject(status);
         whiteOutputStream.flush();
