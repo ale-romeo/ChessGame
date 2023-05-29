@@ -236,8 +236,9 @@ public class ClientPlayer extends Application {
                 String nickname = document.getString("nickname");
                 int wins = document.getInteger("wins");
                 int losses = document.getInteger("losses");
+                int draws = document.getInteger("draws");
 
-                scoreboardEntries.add(new ScoreboardEntry(nickname, wins, losses));
+                scoreboardEntries.add(new ScoreboardEntry(nickname, wins, losses, draws));
             }
             // Aggiorna la TableView con i dati della scoreboard
             scoreboardTable.getItems().setAll(scoreboardEntries);
@@ -249,20 +250,24 @@ public class ClientPlayer extends Application {
                 TableColumn<ScoreboardEntry, String> nicknameColumn = new TableColumn<>("Nickname");
                 TableColumn<ScoreboardEntry, Integer> winsColumn = new TableColumn<>("Wins");
                 TableColumn<ScoreboardEntry, Integer> lossesColumn = new TableColumn<>("Losses");
+                TableColumn<ScoreboardEntry, Integer> drawsColumn = new TableColumn<>("Draws");
 
                 // Associazione delle proprietà dei dati alle colonne
                 nicknameColumn.setCellValueFactory(new PropertyValueFactory<>("nickname"));
                 winsColumn.setCellValueFactory(new PropertyValueFactory<>("wins"));
                 lossesColumn.setCellValueFactory(new PropertyValueFactory<>("losses"));
+                drawsColumn.setCellValueFactory(new PropertyValueFactory<>("draws"));
 
                 // Aggiungi le colonne alla TableView
                 scoreboardTable.getColumns().add(nicknameColumn);
                 scoreboardTable.getColumns().add(winsColumn);
                 scoreboardTable.getColumns().add(lossesColumn);
+                scoreboardTable.getColumns().add(drawsColumn);
 
-                nicknameColumn.setPrefWidth(90);
-                winsColumn.setPrefWidth(90);
-                lossesColumn.setPrefWidth(90);
+                nicknameColumn.setPrefWidth(85);
+                winsColumn.setPrefWidth(65);
+                lossesColumn.setPrefWidth(65);
+                drawsColumn.setPrefWidth(65);
                 scoreboardTable.autosize();
 
                 // Aggiungi la TableView alla scena o al layout desiderato
@@ -368,7 +373,6 @@ public class ClientPlayer extends Application {
                         clearHighlightedMoves(gridPane);
                         posMoves.clear();
                         // Ottenere le possibili mosse del pezzo
-                        piece.clearAvailableMoves();
                         piece.calculatePossibleMoves(this.chessboard, square, kingSquare);
                         posMoves = piece.getAvailableMoves();
                         if (posMoves != null) {

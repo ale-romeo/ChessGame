@@ -69,13 +69,13 @@ public class ClientHandler implements Runnable {
             System.out.println("Errore durante l'esecuzione del client handler: " + e.getMessage());
             try {
                 boolean flag = waitForResponse(White);
-                writeToMongoDB(whitePlayer, 1, 0);
-                writeToMongoDB(blackPlayer, 0, 1);
+                writeToMongoDB(whitePlayer, 1, 0, 0);
+                writeToMongoDB(blackPlayer, 0, 1, 0);
                 sendConnErr(White);
                 sendScoreboard(White);
             } catch (IOException ex) {
-                writeToMongoDB(blackPlayer, 1, 0);
-                writeToMongoDB(whitePlayer, 0, 1);
+                writeToMongoDB(blackPlayer, 1, 0, 0);
+                writeToMongoDB(whitePlayer, 0, 1, 0);
                 try {
                     sendConnErr(Black);
                     sendScoreboard(Black);
@@ -147,32 +147,39 @@ public class ClientHandler implements Runnable {
     }
 
     private boolean CheckMate() {
+        Color turn;
+        if (isWhiteTurn) {
+            turn = Color.WHITE;
+        } else {
+            turn = Color.BLACK;
+        }
         List<Square> allSquares = this.chessboard.getAllSquares();
         List<Move> allAvailableMoves = new ArrayList<>(); // Inizializza la lista delle mosse disponibili
         Square kingSquare = null;
 
         for (Square square : allSquares) {
-            if (square.getPiece() instanceof King && (square.getPiece().getColor() == (Color.WHITE)) == !isWhiteTurn) {
+            if (square.getPiece() instanceof King && square.getPiece().getColor() != turn) {
                 kingSquare = square;
                 break;
             }
         }
 
-        for (Square square : allSquares) {
-            if (square.getPiece() != null && square.getPiece().getColor() == kingSquare.getPiece().getColor()) {
-                square.getPiece().calculatePossibleMoves(this.chessboard, square, kingSquare);
-                allAvailableMoves.addAll(square.getPiece().getAvailableMoves());
+        for (Square s : allSquares) {
+            if (s.getPiece() != null && s.getPiece().getColor() != turn) {
+                s.getPiece().calculatePossibleMoves(this.chessboard, s, kingSquare);
+                allAvailableMoves.addAll(s.getPiece().getAvailableMoves());
             }
         }
-        System.out.println(kingSquare.getRank()+" "+allAvailableMoves + " " + allAvailableMoves.isEmpty());
+
         if (allAvailableMoves.isEmpty() && ((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
-            System.out.println(" percio");
             status = (!isWhiteTurn ? "Black" : "White") + " Wins"; // Aggiorna lo stato correttamente
-            writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0);
-            writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1);
+            writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
+            writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
             return true;
         } else if (allAvailableMoves.isEmpty() && !((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
             status = "Stalemate"; // Aggiorna lo stato correttamente
+            writeToMongoDB(whitePlayer, 0, 0, 1);
+            writeToMongoDB(blackPlayer, 0, 0, 1);
             return true;
         }
 
@@ -195,7 +202,7 @@ public class ClientHandler implements Runnable {
         currOutputStream.flush();
     }
 
-    private void writeToMongoDB(String nickname, int win, int loss) {
+    private void writeToMongoDB(String nickname, int win, int loss, int draws) {
         // Ottieni un'istanza del database MongoDB
         MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
         MongoDatabase db = mongoClient.getDatabase("chessGame");
@@ -206,20 +213,24 @@ public class ClientHandler implements Runnable {
         if (existingDocument != null) {
             int existingWins = existingDocument.getInteger("wins", 0);
             int existingLosses = existingDocument.getInteger("losses", 0);
+            int existingDraws = existingDocument.getInteger("draws", 0);
 
             // Calcola il nuovo punteggio
             int updatedWins = existingWins + win;
             int updatedLosses = existingLosses + loss;
+            int updatedDraws = existingDraws + draws;
 
             // Aggiorna il documento con il nuovo punteggio
             db.getCollection("scoreboard").updateOne(eq("nickname", nickname),
                     new Document("$set", new Document("wins", updatedWins)
-                            .append("losses", updatedLosses)));
+                            .append("losses", updatedLosses)
+                            .append("draws", updatedDraws)));
         } else {
             // Il documento non esiste, quindi inserisci un nuovo documento
             Document newDocument = new Document("nickname", nickname)
                     .append("wins", win)
-                    .append("losses", loss);
+                    .append("losses", loss)
+                    .append("draws", draws);
             db.getCollection("scoreboard").insertOne(newDocument);
         }
 

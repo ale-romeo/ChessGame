@@ -5,7 +5,7 @@ public class Queen extends Piece {
 
     @Override
     public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
-
+        this.clearAvailableMoves();
         // Calcola le mosse orizzontali e verticali
         getHorizontalVerticalMoves(board, currentSquare, 1, 0, KingSquare); // Verso destra
         getHorizontalVerticalMoves(board, currentSquare, -1, 0, KingSquare); // Verso sinistra

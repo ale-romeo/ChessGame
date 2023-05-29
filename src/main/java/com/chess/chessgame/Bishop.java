@@ -5,7 +5,7 @@ public class Bishop extends Piece {
 
     @Override
     public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
-
+        this.clearAvailableMoves();
         int currentRank = currentSquare.getRank();
         char currentFile = currentSquare.getFile();
 
