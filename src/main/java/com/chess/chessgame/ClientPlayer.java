@@ -137,7 +137,7 @@ public class ClientPlayer extends Application {
                     } else {
                         hbox.getChildren().addAll(bqueenImageView, brookImageView, bbishopImageView, bknightImageView);
                     }
-
+a
 
                     // Aggiunta del gestore degli eventi agli ImageView
                     queenImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.QUEEN, alert));
