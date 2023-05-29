@@ -5,10 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
@@ -59,6 +57,9 @@ public class ClientHandler implements Runnable {
                 } else {
                     handlePlayerTurn(Black);
                     isWhiteTurn = true;
+                }
+                if (Objects.equals(status, "Promo")) {
+                    isWhiteTurn = !isWhiteTurn;
                 }
             }
             sendGameStatus(White, Black);
@@ -147,6 +148,9 @@ public class ClientHandler implements Runnable {
         for (Square a : allSquares) {
             if (a != null && chessboard.isOccupiedByOpponent(a, isWhiteTurn ? Color.WHITE : Color.BLACK) && a.getPiece() instanceof Pawn pawn) {
                 pawn.enpassant = false;
+            }
+            if (a != null && (a.getRank() == 8 || a.getRank() == 1)) {
+                status = "Promo";
             }
         }
         if (CheckMate()) { running = false; }

@@ -17,7 +17,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.bson.Document;
-
+import javafx.scene.control.Alert;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -25,7 +25,7 @@ import java.net.Socket;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
-
+import javafx.scene.layout.HBox;
 
 public class ClientPlayer extends Application {
     private String nickname, serverAddress, end;
@@ -111,6 +111,50 @@ public class ClientPlayer extends Application {
                 this.running = receiveStatus();
                 if (!running) {
                     break;
+                }
+                if (Objects.equals(end, "Promo")) {
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("Promozione del pedone");
+                    alert.setHeaderText("Seleziona il tipo di pezzo per la promozione:");
+
+                    ImageView wqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qlt60.png"));
+                    ImageView bqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qdt60.png"));
+                    ImageView wrookImageView = new ImageView(new Image("file:src/main/img/Chess_rlt60.png"));
+                    ImageView brookImageView = new ImageView(new Image("file:src/main/img/Chess_rdt60.png"));
+                    ImageView wbishopImageView = new ImageView(new Image("file:src/main/img/Chess_blt60.png"));
+                    ImageView bbishopImageView = new ImageView(new Image("file:src/main/img/Chess_bdt60.png"));
+                    ImageView wknightImageView = new ImageView(new Image("file:src/main/img/Chess_klt60.png"));
+                    ImageView bknightImageView = new ImageView(new Image("file:src/main/img/Chess_kdt60.png"));
+
+
+                    // Aggiunta dei bottoni di scelta per i tipi di pezzo
+                    HBox hbox = new HBox(10);
+                    alert.getDialogPane().setContent(hbox);
+                    // Aggiunta dei bottoni di scelta per i tipi di pezzo
+                    alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+                    if (this.color == Color.WHITE) {
+                        hbox.getChildren().addAll(wqueenImageView, wrookImageView, wbishopImageView, wknightImageView);
+                    } else {
+                        hbox.getChildren().addAll(bqueenImageView, brookImageView, bbishopImageView, bknightImageView);
+                    }
+
+
+                    // Aggiunta del gestore degli eventi agli ImageView
+                    queenImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.QUEEN, alert));
+                    rookImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.ROOK, alert));
+                    bishopImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.BISHOP, alert));
+                    knightImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.KNIGHT, alert));
+
+                    // Mostra il popup e attende la selezione dell'utente
+                    alert.showAndWait().ifPresent(buttonType -> {
+                        if (buttonType == ButtonType.OK) {
+                            // Logica per gestire la selezione del pezzo
+                            // ...
+                        } else {
+                            // Logica per annullare la promozione
+                            // ...
+                        }
+                    });
                 }
                 this.chessboard = receiveChessboard();
                 if (this.chessboard == null) {
