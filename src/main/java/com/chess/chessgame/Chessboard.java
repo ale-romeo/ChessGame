@@ -97,7 +97,9 @@ public class Chessboard implements Serializable {
     public void movePiece(Move move) {
         Piece piece = move.getPiece();
         squares[move.fromSquare().getRank() - 1][move.fromSquare().getFile() - 'A'].clearPiece();
-        if (isOccupied(squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A']) && isOccupiedByOpponent(squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'], move.toSquare().getPiece().getColor())) {
+        if (piece instanceof Pawn && isOccupiedByOpponent(squares[move.toSquare().getRank() - (piece.getColor() == Color.WHITE ? -2 : 0)][move.toSquare().getFile() - 'A'], piece.getColor()) && (squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A']).getPiece() instanceof Pawn opPawn && opPawn.enpassant) {
+            squares[move.toSquare().getRank() - (piece.getColor() == Color.WHITE ? -2 : 0)][move.toSquare().getFile() - 'A'].clearPiece();
+        } else if (isOccupiedByOpponent(squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'], piece.getColor())) {
             squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].clearPiece();
         }
         squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].setPiece(piece);

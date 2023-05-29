@@ -1,7 +1,10 @@
 package com.chess.chessgame;
 
 public class Pawn extends Piece {
-    public Pawn(Color color) { super(color); }
+    public boolean enpassant;
+    public Pawn(Color color) { super(color);
+        enpassant = false;
+    }
 
     @Override
     public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
@@ -24,54 +27,22 @@ public class Pawn extends Piece {
             } else {
                 oppColor = Color.WHITE;
             }
-            if (nextSquare.getPiece() instanceof Pawn) {
-                temp = new Pawn(oppColor);
-            } else if (nextSquare.getPiece() instanceof Queen) {
-                temp = new Queen(oppColor);
-            } else if (nextSquare.getPiece() instanceof Rook) {
-                temp = new Rook(oppColor);
-            } else if (nextSquare.getPiece() instanceof Knight) {
-                temp = new Knight(oppColor);
-            } else if (nextSquare.getPiece() instanceof Bishop) {
-                temp = new Bishop(oppColor);
-            } else if (nextSquare.getPiece() instanceof King) {
-                temp = new King(oppColor);
-            }
             board.movePiece(new Move(currentSquare, nextSquare));
             if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
                 addAvailableMoves(new Move(currentSquare, nextSquare));
             }
             board.movePiece(new Move(nextSquare, currentSquare));
-            if (temp != null) {
-                nextSquare.setPiece(temp);
-            }
 
             // Movimento in avanti di due caselle se è il primo movimento del pedone
             if (isFirstMove(currentRank, direction)) {
                 Square doubleMoveSquare = board.getSquare(currentRank + (2 * direction), currentFile);
                 if (doubleMoveSquare != null && !board.isOccupied(doubleMoveSquare)) {
-                    temp = null;
-                    if (doubleMoveSquare.getPiece() instanceof Pawn) {
-                        temp = new Pawn(oppColor);
-                    } else if (doubleMoveSquare.getPiece() instanceof Queen) {
-                        temp = new Queen(oppColor);
-                    } else if (doubleMoveSquare.getPiece() instanceof Rook) {
-                        temp = new Rook(oppColor);
-                    } else if (doubleMoveSquare.getPiece() instanceof Knight) {
-                        temp = new Knight(oppColor);
-                    } else if (doubleMoveSquare.getPiece() instanceof Bishop) {
-                        temp = new Bishop(oppColor);
-                    } else if (doubleMoveSquare.getPiece() instanceof King) {
-                        temp = new King(oppColor);
-                    }
                     board.movePiece(new Move(currentSquare, doubleMoveSquare));
                     if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
                         addAvailableMoves(new Move(currentSquare, doubleMoveSquare));
+                        this.enpassant = true;
                     }
                     board.movePiece(new Move(doubleMoveSquare, currentSquare));
-                    if (temp != null) {
-                        doubleMoveSquare.setPiece(temp);
-                    }
                 }
             }
         }
@@ -138,6 +109,25 @@ public class Pawn extends Piece {
             if (temp != null) {
                 captureSquare2.setPiece(temp);
             }
+        }
+
+        Square enpass1 = board.getSquare(currentRank, (char) (currentFile + 1));
+        Square enpass2 = board.getSquare(currentRank, (char) (currentFile - 1));
+        if (captureSquare1 != null && enpass1 != null && board.isOccupiedByOpponent(enpass1, getColor()) && enpass1.getPiece() instanceof Pawn pawn && pawn.enpassant) {
+            board.movePiece(new Move(currentSquare, captureSquare1));
+            if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                addAvailableMoves(new Move(currentSquare, captureSquare1));
+            }
+            board.movePiece(new Move(captureSquare1, currentSquare));
+            enpass1.setPiece(pawn);
+        }
+        if (captureSquare2 != null && enpass2 != null && board.isOccupiedByOpponent(enpass2, getColor()) && enpass2.getPiece() instanceof Pawn pawn && pawn.enpassant) {
+            board.movePiece(new Move(currentSquare, captureSquare2));
+            if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
+                addAvailableMoves(new Move(currentSquare, captureSquare2));
+            }
+            board.movePiece(new Move(captureSquare2, currentSquare));
+            enpass2.setPiece(pawn);
         }
     }
 

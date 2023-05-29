@@ -133,7 +133,7 @@ public class ClientPlayer extends Application {
             }
         }
 
-        if (((this.color == Color.WHITE) && Objects.equals(end, "White Won")) || ((this.color == Color.BLACK) && Objects.equals(end, "Black Won"))) {
+        if (((this.color == Color.WHITE) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.BLACK) && Objects.equals(end, "BLACK Wins"))) {
             Platform.runLater(() -> {
                 Label victoryLabel = new Label("Hai vinto!");
                 Button scoreboardButton = new Button("Visualizza classifica");
@@ -164,7 +164,7 @@ public class ClientPlayer extends Application {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        } else if (((this.color == Color.BLACK) && Objects.equals(end, "White Won")) || ((this.color == Color.WHITE) && Objects.equals(end, "Black Won"))) {
+        } else if (((this.color == Color.BLACK) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.WHITE) && Objects.equals(end, "BLACK Wins"))) {
             Platform.runLater(() -> {
                 Label victoryLabel = new Label("Hai perso!");
                 Button scoreboardButton = new Button("Visualizza classifica");

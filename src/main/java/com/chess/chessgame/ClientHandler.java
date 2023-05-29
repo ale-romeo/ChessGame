@@ -143,6 +143,12 @@ public class ClientHandler implements Runnable {
         Move move = (Move) currentPlayerInputStream.readObject();
 
         this.chessboard.movePiece(move);
+        List<Square> allSquares = this.chessboard.getAllSquares();
+        for (Square a : allSquares) {
+            if (a != null && chessboard.isOccupiedByOpponent(a, isWhiteTurn ? Color.WHITE : Color.BLACK) && a.getPiece() instanceof Pawn pawn) {
+                pawn.enpassant = false;
+            }
+        }
         if (CheckMate()) { running = false; }
     }
 
@@ -172,7 +178,7 @@ public class ClientHandler implements Runnable {
         }
 
         if (allAvailableMoves.isEmpty() && ((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
-            status = (!isWhiteTurn ? "Black" : "White") + " Wins"; // Aggiorna lo stato correttamente
+            status = turn + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
             return true;
