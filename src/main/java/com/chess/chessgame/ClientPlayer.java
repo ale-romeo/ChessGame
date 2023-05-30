@@ -18,6 +18,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.bson.Document;
 import javafx.scene.control.Alert;
+
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -71,6 +73,7 @@ public class ClientPlayer extends Application {
 
         // Creazione della scena
         Scene scene = new Scene(vbox, 300, 200);
+        primaryStage.getIcons().add(new Image("file:src/main/img/Chess_nlt60.png"));
 
         // Impostazione della scena primaria
         primaryStage.setScene(scene);
@@ -112,164 +115,48 @@ public class ClientPlayer extends Application {
                 if (!running) {
                     break;
                 }
-                if (Objects.equals(end, "Promo")) {
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Promozione del pedone");
-                    alert.setHeaderText("Seleziona il tipo di pezzo per la promozione:");
-
-                    ImageView wqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qlt60.png"));
-                    ImageView bqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qdt60.png"));
-                    ImageView wrookImageView = new ImageView(new Image("file:src/main/img/Chess_rlt60.png"));
-                    ImageView brookImageView = new ImageView(new Image("file:src/main/img/Chess_rdt60.png"));
-                    ImageView wbishopImageView = new ImageView(new Image("file:src/main/img/Chess_blt60.png"));
-                    ImageView bbishopImageView = new ImageView(new Image("file:src/main/img/Chess_bdt60.png"));
-                    ImageView wknightImageView = new ImageView(new Image("file:src/main/img/Chess_klt60.png"));
-                    ImageView bknightImageView = new ImageView(new Image("file:src/main/img/Chess_kdt60.png"));
-
-
-                    // Aggiunta dei bottoni di scelta per i tipi di pezzo
-                    HBox hbox = new HBox(10);
-                    alert.getDialogPane().setContent(hbox);
-                    // Aggiunta dei bottoni di scelta per i tipi di pezzo
-                    alert.getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-                    if (this.color == Color.WHITE) {
-                        hbox.getChildren().addAll(wqueenImageView, wrookImageView, wbishopImageView, wknightImageView);
-                    } else {
-                        hbox.getChildren().addAll(bqueenImageView, brookImageView, bbishopImageView, bknightImageView);
-                    }
-a
-
-                    // Aggiunta del gestore degli eventi agli ImageView
-                    queenImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.QUEEN, alert));
-                    rookImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.ROOK, alert));
-                    bishopImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.BISHOP, alert));
-                    knightImageView.setOnMouseClicked(event -> handlePieceSelection(PieceType.KNIGHT, alert));
-
-                    // Mostra il popup e attende la selezione dell'utente
-                    alert.showAndWait().ifPresent(buttonType -> {
-                        if (buttonType == ButtonType.OK) {
-                            // Logica per gestire la selezione del pezzo
-                            // ...
-                        } else {
-                            // Logica per annullare la promozione
-                            // ...
-                        }
-                    });
-                }
                 this.chessboard = receiveChessboard();
-                if (this.chessboard == null) {
-                    break;
-                }
                 this.myTurn = receiveTurn();
+
+                if (Objects.equals(end, "Promo") && myTurn) {
+                    Platform.runLater(this::promoAlert);
+                    continue;
+                }
                 Platform.runLater(() -> {
                     GridPane gridPane = createChessboard();
+                    Button surrButton = new Button("Resa");
 
+                    surrButton.setOnAction(event -> {
+                        sendSurr();
+                        wait = false;
+                        running = false;
+                    });
+
+                    VBox root = new VBox(gridPane, surrButton);
+                    root.setAlignment(Pos.CENTER);
+                    root.setSpacing(10);
                     primaryStage.setTitle("Chess Game - " + nickname + " - " + this.color);
-                    primaryStage.setScene(new Scene(gridPane, 450, 450));
+                    primaryStage.setScene(new Scene(root, 450, 500));
                     displayChessboardInGame(gridPane);
                 });
                 if (myTurn) {
                     while (wait) Thread.onSpinWait();
                     wait = true;
                 }
+            } catch (EOFException e) {
+                showConnErr(primaryStage);
             } catch (IOException | ClassNotFoundException e) {
                 throw new RuntimeException(e);
             }
         }
 
         if (((this.color == Color.WHITE) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.BLACK) && Objects.equals(end, "BLACK Wins"))) {
-            Platform.runLater(() -> {
-                Label victoryLabel = new Label("Hai vinto!");
-                Button scoreboardButton = new Button("Visualizza classifica");
-                Button newGameButton = new Button("Nuova Partita");
-
-                scoreboardButton.setOnAction(event -> {
-                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                    showScoreboard(primaryStage);
-                });
-                // Azione del pulsante "Nuova partita"
-                newGameButton.setOnAction(event -> {
-                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                    newGame = true;
-                });
-
-                VBox vbox = new VBox(10);
-                vbox.setPadding(new Insets(10));
-                vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
-
-                primaryStage.setTitle("Vittoria");
-                primaryStage.setScene(new Scene(vbox, 300, 200));
-            });
-            while (!newGame) Thread.onSpinWait();
-            newGame = false;
-            try {
-                this.serverSocket.close();
-                initGame(primaryStage);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            showWin(primaryStage);
         } else if (((this.color == Color.BLACK) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.WHITE) && Objects.equals(end, "BLACK Wins"))) {
-            Platform.runLater(() -> {
-                Label victoryLabel = new Label("Hai perso!");
-                Button scoreboardButton = new Button("Visualizza classifica");
-                Button newGameButton = new Button("Nuova Partita");
-
-                scoreboardButton.setOnAction(event -> {
-                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                    showScoreboard(primaryStage);
-                });
-                // Azione del pulsante "Nuova partita"
-                newGameButton.setOnAction(event -> {
-                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                    newGame = true;
-                });
-
-                VBox vbox = new VBox(10);
-                vbox.setPadding(new Insets(10));
-                vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
-
-                primaryStage.setTitle("Sconfitta");
-                primaryStage.setScene(new Scene(vbox, 300, 200));
-            });
-            while (!newGame) Thread.onSpinWait();
-            newGame = false;
-            try {
-                this.serverSocket.close();
-                initGame(primaryStage);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            showLose(primaryStage);
+        } else if (Objects.equals(end, "conn_err")) {
+            showWin(primaryStage);
         }
-        Platform.runLater(() -> {
-            Label victoryLabel = new Label("Hai vinto!");
-            Button scoreboardButton = new Button("Visualizza classifica");
-            Button newGameButton = new Button("Nuova Partita");
-
-            scoreboardButton.setOnAction(event -> {
-                // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                showScoreboard(primaryStage);
-            });
-            // Azione del pulsante "Nuova partita"
-            newGameButton.setOnAction(event -> {
-                // Riavvia la partita o altre azioni in base alla logica del tuo programma
-                newGame = true;
-            });
-
-            VBox vbox = new VBox(10);
-            vbox.setPadding(new Insets(10));
-            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
-
-            primaryStage.setTitle("Vittoria");
-            primaryStage.setScene(new Scene(vbox, 300, 200));
-        });
-        while (!newGame) Thread.onSpinWait();
-        newGame = false;
-            try {
-                this.serverSocket.close();
-                initGame(primaryStage);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
     }
 
     private void showScoreboard(Stage primaryStage) {
@@ -289,6 +176,7 @@ a
             //this.scoreboard = receiveScoreboard();
             Platform.runLater(() -> {
                 Label scoreLabel = new Label("Classifica:");
+                Button newGameButton = new Button("Nuova Partita");
 
                 // Creazione delle colonne della scoreboard
                 TableColumn<ScoreboardEntry, String> nicknameColumn = new TableColumn<>("Nickname");
@@ -308,19 +196,22 @@ a
                 scoreboardTable.getColumns().add(lossesColumn);
                 scoreboardTable.getColumns().add(drawsColumn);
 
-                nicknameColumn.setPrefWidth(85);
-                winsColumn.setPrefWidth(65);
-                lossesColumn.setPrefWidth(65);
-                drawsColumn.setPrefWidth(65);
+                nicknameColumn.setPrefWidth(115);
+                winsColumn.setPrefWidth(80);
+                lossesColumn.setPrefWidth(80);
+                drawsColumn.setPrefWidth(80);
                 scoreboardTable.autosize();
 
-                // Aggiungi la TableView alla scena o al layout desiderato
+                newGameButton.setOnAction(event -> {
+                    // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                    newGame = true;
+                });
 
                 VBox scoreBox = new VBox(10);
                 scoreBox.setPadding(new Insets(10));
-                scoreBox.getChildren().addAll(scoreLabel, scoreboardTable);
+                scoreBox.getChildren().addAll(scoreLabel, scoreboardTable, newGameButton);
                 primaryStage.setTitle("Chess Game - Classifica");
-                primaryStage.setScene(new Scene(scoreBox, 300, 200));
+                primaryStage.setScene(new Scene(scoreBox, 400, 300));
             });
         } catch (IOException e) {
             e.printStackTrace();
@@ -350,7 +241,7 @@ a
     private boolean receiveStatus() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
         end = (String) serverInputStream.readObject();
-        return (end).equals("Running");
+        return (end).equals("Running") || (end).equals("Promo");
     }
 
     private Chessboard receiveChessboard() throws IOException, ClassNotFoundException {
@@ -465,6 +356,170 @@ a
         highlightedCircles.clear();
     }
 
+    private void promoAlert() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Promozione");
+        alert.setHeaderText("Seleziona pezzo:");
+
+        ImageView wqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qlt60.png"));
+        ImageView bqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qdt60.png"));
+        ImageView wrookImageView = new ImageView(new Image("file:src/main/img/Chess_rlt60.png"));
+        ImageView brookImageView = new ImageView(new Image("file:src/main/img/Chess_rdt60.png"));
+        ImageView wbishopImageView = new ImageView(new Image("file:src/main/img/Chess_blt60.png"));
+        ImageView bbishopImageView = new ImageView(new Image("file:src/main/img/Chess_bdt60.png"));
+        ImageView wknightImageView = new ImageView(new Image("file:src/main/img/Chess_nlt60.png"));
+        ImageView bknightImageView = new ImageView(new Image("file:src/main/img/Chess_ndt60.png"));
+
+
+        // Aggiunta dei bottoni di scelta per i tipi di pezzo
+        HBox hbox = new HBox(10);
+        alert.getDialogPane().setContent(hbox);
+        // Aggiunta dei bottoni di scelta per i tipi di pezzo
+        alert.getButtonTypes().setAll(ButtonType.OK);
+        if (this.color == Color.WHITE) {
+            hbox.getChildren().addAll(wqueenImageView, wrookImageView, wbishopImageView, wknightImageView);
+
+            wqueenImageView.setOnMouseClicked(event -> {
+                sendPromo(new Queen(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            wrookImageView.setOnMouseClicked(event -> {
+                sendPromo(new Rook(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            wbishopImageView.setOnMouseClicked(event -> {
+                sendPromo(new Bishop(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            wknightImageView.setOnMouseClicked(event -> {
+                sendPromo(new Knight(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+
+        } else {
+            hbox.getChildren().addAll(bqueenImageView, brookImageView, bbishopImageView, bknightImageView);
+            bqueenImageView.setOnMouseClicked(event -> {
+                sendPromo(new Queen(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            brookImageView.setOnMouseClicked(event -> {
+                sendPromo(new Rook(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            bbishopImageView.setOnMouseClicked(event -> {
+                sendPromo(new Bishop(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+            bknightImageView.setOnMouseClicked(event -> {
+                sendPromo(new Knight(this.color));
+                alert.setResult(ButtonType.OK); // Imposta il risultato dell'Alert su OK
+            });
+
+        }
+        // Mostra il popup e attende la selezione dell'utente
+        alert.showAndWait().ifPresent(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                alert.close();
+            }
+        });
+    }
+
+    private void showWin(Stage primaryStage) {
+        Platform.runLater(() -> {
+            Label victoryLabel = new Label("Hai vinto!");
+            Button scoreboardButton = new Button("Visualizza classifica");
+            Button newGameButton = new Button("Nuova Partita");
+
+            scoreboardButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                showScoreboard(primaryStage);
+            });
+            // Azione del pulsante "Nuova partita"
+            newGameButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                newGame = true;
+            });
+
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+            primaryStage.setTitle("Vittoria");
+            primaryStage.setScene(new Scene(vbox, 300, 200));
+        });
+        while (!newGame) Thread.onSpinWait();
+        newGame = false;
+        try {
+            this.serverSocket.close();
+            running = true;
+            initGame(primaryStage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void showLose(Stage primaryStage) {
+        Platform.runLater(() -> {
+            Label victoryLabel = new Label("Hai perso!");
+            Button scoreboardButton = new Button("Visualizza classifica");
+            Button newGameButton = new Button("Nuova Partita");
+
+            scoreboardButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                showScoreboard(primaryStage);
+            });
+            // Azione del pulsante "Nuova partita"
+            newGameButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                newGame = true;
+            });
+
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+            primaryStage.setTitle("Sconfitta");
+            primaryStage.setScene(new Scene(vbox, 300, 200));
+        });
+        while (!newGame) Thread.onSpinWait();
+        newGame = false;
+        try {
+            this.serverSocket.close();
+            running = true;
+            initGame(primaryStage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void showConnErr(Stage primaryStage) {
+        Platform.runLater(() -> {
+            Label victoryLabel = new Label("Connessione persa con l'avversario");
+            Button newGameButton = new Button("Nuova Partita");
+
+            // Azione del pulsante "Nuova partita"
+            newGameButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                newGame = true;
+            });
+
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.getChildren().addAll(victoryLabel, newGameButton);
+
+            primaryStage.setTitle("Fine partita");
+            primaryStage.setScene(new Scene(vbox, 300, 200));
+        });
+        while (!newGame) Thread.onSpinWait();
+        newGame = false;
+        try {
+            this.serverSocket.close();
+            initGame(primaryStage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private ImageView createPieceImageView(Piece piece) {
         // Esempio di creazione d'ImageView per i pezzi
         ImageView imageView = new ImageView();
@@ -526,7 +581,7 @@ a
         return color;
     }
 
-    public void sendMove(Move move) {
+    private void sendMove(Move move) {
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
             outputStream.writeObject(move);
@@ -537,13 +592,30 @@ a
         }
     }
 
+    private void sendPromo(Piece piece) {
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
+            outputStream.writeObject(piece);
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Gestione dell'errore d'invio della mossa al server
+        }
+    }
+
+    private void sendSurr() {
+        try {
+            ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
+            outputStream.writeObject("Surrender");
+            outputStream.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Gestione dell'errore d'invio della mossa al server
+        }
+    }
+
     private List<Document> receiveScoreboard() throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(serverSocket.getInputStream());
         return (List<Document>) inputStream.readObject();
-    }
-
-
-    public void disconnect() {
-        // Logica per disconnettersi dal server
     }
 }

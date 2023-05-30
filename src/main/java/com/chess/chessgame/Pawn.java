@@ -20,13 +20,6 @@ public class Pawn extends Piece {
         Square nextSquare = board.getSquare(currentRank + direction, currentFile);
 
         if (nextSquare != null && !board.isOccupied(nextSquare)) {
-            Piece temp = null;
-            Color oppColor;
-            if (getColor() == Color.WHITE) {
-                oppColor = Color.BLACK;
-            } else {
-                oppColor = Color.WHITE;
-            }
             board.movePiece(new Move(currentSquare, nextSquare));
             if (!((King) KingSquare.getPiece()).Check(board, KingSquare)) {
                 addAvailableMoves(new Move(currentSquare, nextSquare));

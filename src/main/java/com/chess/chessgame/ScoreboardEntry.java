@@ -1,10 +1,10 @@
 package com.chess.chessgame;
 
 public class ScoreboardEntry {
-    private String nickname;
-    private int wins;
-    private int losses;
-    private int draws;
+    private final String nickname;
+    private final int wins;
+    private final int losses;
+    private final int draws;
 
     public ScoreboardEntry(String nickname, int wins, int losses, int draws) {
         this.nickname = nickname;

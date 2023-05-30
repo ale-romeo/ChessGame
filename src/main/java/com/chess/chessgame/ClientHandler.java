@@ -6,14 +6,11 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.*;
-
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
-import org.bson.io.BsonOutput;
 
-import static com.mongodb.client.model.Filters.all;
 import static com.mongodb.client.model.Filters.eq;
 
 
@@ -65,22 +62,21 @@ public class ClientHandler implements Runnable {
             sendGameStatus(White, Black);
             sendScoreboard(White);
             sendScoreboard(Black);
-
         } catch (IOException e) {
             System.out.println("Errore durante l'esecuzione del client handler: " + e.getMessage());
             try {
-                boolean flag = waitForResponse(White);
+                System.out.println(waitForResponse(White) ? "Black disconnesso" : "White disconnesso");
                 writeToMongoDB(whitePlayer, 1, 0, 0);
                 writeToMongoDB(blackPlayer, 0, 1, 0);
                 sendConnErr(White);
                 sendScoreboard(White);
-            } catch (IOException ex) {
+            } catch (IOException | ClassNotFoundException ex) {
                 writeToMongoDB(blackPlayer, 1, 0, 0);
                 writeToMongoDB(whitePlayer, 0, 1, 0);
                 try {
                     sendConnErr(Black);
                     sendScoreboard(Black);
-                } catch (IOException exc) {
+                } catch (IOException | ClassNotFoundException exc) {
                     throw new RuntimeException(exc);
                 }
             }
@@ -139,30 +135,51 @@ public class ClientHandler implements Runnable {
     }
 
     private void handlePlayerTurn(Socket currentPlayerSocket) throws IOException, ClassNotFoundException {
-        // Ricevi la mossa dal giocatore corrente
         ObjectInputStream currentPlayerInputStream = new ObjectInputStream(currentPlayerSocket.getInputStream());
-        Move move = (Move) currentPlayerInputStream.readObject();
+        Object obj = currentPlayerInputStream.readObject();
+        if (obj instanceof String && (obj).equals("Surrender")) {
+            Color turn = !isWhiteTurn ? Color.WHITE : Color.BLACK;
+            writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
+            writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
+            status = turn + " Wins";
+            running = false;
+        } else {
+            if (obj instanceof Piece piece && Objects.equals(status, "Promo")) {
 
-        this.chessboard.movePiece(move);
-        List<Square> allSquares = this.chessboard.getAllSquares();
-        for (Square a : allSquares) {
-            if (a != null && chessboard.isOccupiedByOpponent(a, isWhiteTurn ? Color.WHITE : Color.BLACK) && a.getPiece() instanceof Pawn pawn) {
-                pawn.enpassant = false;
+                List<Square> allSquares = this.chessboard.getAllSquares();
+                for (Square a : allSquares) {
+                    if (a != null && a.getPiece() instanceof Pawn && (a.getRank() == 8 || a.getRank() == 1)) {
+                        a.setPiece(piece);
+                    }
+                }
+                status = "Running";
+            } else {
+                // Ricevi la mossa dal giocatore corrente
+                Move move = null;
+                if (obj instanceof Move) {
+                    move = (Move) obj;
+                }
+
+                assert move != null;
+                this.chessboard.movePiece(move);
+                List<Square> allSquares = this.chessboard.getAllSquares();
+                for (Square a : allSquares) {
+                    if (a != null && chessboard.isOccupiedByOpponent(a, isWhiteTurn ? Color.WHITE : Color.BLACK) && a.getPiece() instanceof Pawn pawn) {
+                        pawn.enpassant = false;
+                    }
+                    if (a != null && a.getPiece() instanceof Pawn && (a.getRank() == 8 || a.getRank() == 1)) {
+                        status = "Promo";
+                    }
+                }
             }
-            if (a != null && (a.getRank() == 8 || a.getRank() == 1)) {
-                status = "Promo";
-            }
+
+            if (CheckMate()) { running = false; }
         }
-        if (CheckMate()) { running = false; }
+
     }
 
     private boolean CheckMate() {
-        Color turn;
-        if (isWhiteTurn) {
-            turn = Color.WHITE;
-        } else {
-            turn = Color.BLACK;
-        }
+        Color turn = isWhiteTurn ? Color.WHITE : Color.BLACK;
         List<Square> allSquares = this.chessboard.getAllSquares();
         List<Move> allAvailableMoves = new ArrayList<>(); // Inizializza la lista delle mosse disponibili
         Square kingSquare = null;
@@ -181,7 +198,7 @@ public class ClientHandler implements Runnable {
             }
         }
 
-        if (allAvailableMoves.isEmpty() && ((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
+        if (allAvailableMoves.isEmpty() && ((King) Objects.requireNonNull(kingSquare).getPiece()).Check(this.chessboard, kingSquare)) {
             status = turn + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
@@ -206,7 +223,12 @@ public class ClientHandler implements Runnable {
         blackOutputStream.flush();
     }
 
-    private void sendConnErr(Socket currentSocket) throws IOException {
+    private void sendConnErr(Socket currentSocket) throws IOException, ClassNotFoundException {
+        ObjectInputStream currInputStream = new ObjectInputStream(currentSocket.getInputStream());
+        if (currInputStream.available() > 0) {
+            currInputStream.skip(currInputStream.available());
+        }
+
         ObjectOutputStream currOutputStream = new ObjectOutputStream(currentSocket.getOutputStream());
         currOutputStream.writeObject("conn_err");
         currOutputStream.flush();

@@ -13,18 +13,18 @@ public class King extends Piece {
         char currentFile = currentSquare.getFile();
 
         // Calcola le mosse nelle 8 direzioni intorno al re
-        addMoveIfValid(board, currentSquare, currentRank + 1, currentFile, KingSquare); // Movimento verso l'alto
-        addMoveIfValid(board, currentSquare, currentRank - 1, currentFile, KingSquare); // Movimento verso il basso
-        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile + 1), KingSquare); // Movimento verso destra
-        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile - 1), KingSquare); // Movimento verso sinistra
-        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile + 1), KingSquare); // Movimento in alto a destra
-        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile - 1), KingSquare); // Movimento in alto a sinistra
-        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile + 1), KingSquare); // Movimento in basso a destra
-        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile - 1), KingSquare); // Movimento in basso a sinistra
+        addMoveIfValid(board, currentSquare, currentRank + 1, currentFile); // Movimento verso l'alto
+        addMoveIfValid(board, currentSquare, currentRank - 1, currentFile); // Movimento verso il basso
+        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile + 1)); // Movimento verso destra
+        addMoveIfValid(board, currentSquare, currentRank, (char) (currentFile - 1)); // Movimento verso sinistra
+        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile + 1)); // Movimento in alto a destra
+        addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile - 1)); // Movimento in alto a sinistra
+        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile + 1)); // Movimento in basso a destra
+        addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile - 1)); // Movimento in basso a sinistra
 
     }
 
-    private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file, Square KingSquare) {
+    private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file) {
         Square targetSquare = board.getSquare(rank, file);
         if (targetSquare != null && board.isOccupiedKing(targetSquare, getColor())) {
             List<Square> threats = getThreats(board, targetSquare);

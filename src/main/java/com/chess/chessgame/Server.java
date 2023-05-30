@@ -49,8 +49,6 @@ public class Server {
             clients.add(clientHandler);
             Thread clientThread = new Thread(clientHandler);
             clientThread.start();
-            System.out.println("Partita avviata tra " + clientSocket.getInetAddress() +
-                    " e " + waitingClient.getInetAddress());
         } else {
             // If there are no waiting clients, add the new client to the waiting list
             waitingClients.add(clientSocket);
