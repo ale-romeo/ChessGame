@@ -100,6 +100,14 @@ public class Chessboard implements Serializable {
         squares[move.fromSquare().getRank() - 1][move.fromSquare().getFile() - 'A'].clearPiece();
         if (piece instanceof Pawn && (squares[move.toSquare().getRank() - 1 + direction][move.toSquare().getFile() - 'A']).getPiece() instanceof Pawn opPawn && opPawn.enpassant && opPawn.getColor() != piece.getColor()) {
             squares[move.toSquare().getRank() - 1 + direction][move.toSquare().getFile() - 'A'].clearPiece();
+        } else if (piece instanceof King && Math.abs(move.fromSquare().getFile() - move.toSquare().getFile()) == 2) {
+            if (move.toSquare().getFile() == 'C') {
+                squares[move.fromSquare().getRank() - 1][0].clearPiece();
+                squares[move.fromSquare().getRank() - 1]['D' - 'A'].setPiece(new Rook(move.fromSquare().getRank() == 1 ? Color.WHITE : Color.BLACK));
+            } else if (move.toSquare().getFile() == 'G') {
+                squares[move.fromSquare().getRank() - 1]['H' - 'A'].clearPiece();
+                squares[move.fromSquare().getRank() - 1]['F' - 'A'].setPiece(new Rook(move.fromSquare().getRank() == 1 ? Color.WHITE : Color.BLACK));
+            }
         }
         squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].setPiece(piece);
     }

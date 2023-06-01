@@ -1,11 +1,14 @@
 package com.chess.chessgame;
 
+import org.bson.io.BsonOutput;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class King extends Piece {
     public King(Color color) { super(color); }
 
+    public boolean canCastle = true;
     @Override
     public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
         this.clearAvailableMoves();
@@ -21,7 +24,40 @@ public class King extends Piece {
         addMoveIfValid(board, currentSquare, currentRank + 1, (char) (currentFile - 1)); // Movimento in alto a sinistra
         addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile + 1)); // Movimento in basso a destra
         addMoveIfValid(board, currentSquare, currentRank - 1, (char) (currentFile - 1)); // Movimento in basso a sinistra
+        addCastleIfValid(board, currentSquare, currentRank, 'A');
+        addCastleIfValid(board, currentSquare, currentRank, 'H');
 
+    }
+
+    private void addCastleIfValid(Chessboard board, Square currentSquare, int rank, char file) {
+        Square rookSquare = board.getSquare(rank, file);
+        if (this.canCastle && rookSquare.getPiece() instanceof Rook rook && rook.castle) {
+            if (file == 'A') {
+                for (char f = 'A'; f <= 'E'; f++) {
+                    Square s = board.getSquare(rank, f);
+                    if (s.getPiece() != null && f != 'A' && f != 'E') {
+                        return;
+                    }
+                    List<Square> threats = getThreats(board, s);
+                    if (threats.contains(s)) {
+                        return;
+                    }
+                }
+                addAvailableMoves(new Move(currentSquare, board.getSquare(rank, 'C')));
+            } else if (file == 'H') {
+                for (char f = 'H'; f >= 'E'; f--) {
+                    Square s = board.getSquare(rank, f);
+                    if (s.getPiece() != null && f != 'H' && f != 'E') {
+                        return;
+                    }
+                    List<Square> threats = getThreats(board, s);
+                    if (threats.contains(s)) {
+                        return;
+                    }
+                }
+                addAvailableMoves(new Move(currentSquare, board.getSquare(rank, 'G')));
+            }
+        }
     }
 
     private void addMoveIfValid(Chessboard board, Square currentSquare, int rank, char file) {

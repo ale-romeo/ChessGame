@@ -154,6 +154,8 @@ public class ClientPlayer extends Application {
             showWin(primaryStage);
         } else if (((this.color == Color.BLACK) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.WHITE) && Objects.equals(end, "BLACK Wins"))) {
             showLose(primaryStage);
+        } else if (Objects.equals(end, "Stalemate")) {
+            showDraw(primaryStage);
         } else if (Objects.equals(end, "conn_err")) {
             showWin(primaryStage);
         }
@@ -479,6 +481,40 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
 
             primaryStage.setTitle("Sconfitta");
+            primaryStage.setScene(new Scene(vbox, 300, 200));
+        });
+        while (!newGame) Thread.onSpinWait();
+        newGame = false;
+        try {
+            this.serverSocket.close();
+            running = true;
+            initGame(primaryStage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void showDraw(Stage primaryStage) {
+        Platform.runLater(() -> {
+            Label victoryLabel = new Label("Patta!");
+            Button scoreboardButton = new Button("Visualizza classifica");
+            Button newGameButton = new Button("Nuova Partita");
+
+            scoreboardButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                showScoreboard(primaryStage);
+            });
+            // Azione del pulsante "Nuova partita"
+            newGameButton.setOnAction(event -> {
+                // Riavvia la partita o altre azioni in base alla logica del tuo programma
+                newGame = true;
+            });
+
+            VBox vbox = new VBox(10);
+            vbox.setPadding(new Insets(10));
+            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+
+            primaryStage.setTitle("Patta");
             primaryStage.setScene(new Scene(vbox, 300, 200));
         });
         while (!newGame) Thread.onSpinWait();

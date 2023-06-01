@@ -162,6 +162,11 @@ public class ClientHandler implements Runnable {
 
                 assert move != null;
                 this.chessboard.movePiece(move);
+                if (this.chessboard.getSquare(move.toSquare().getRank(),move.toSquare().getFile()).getPiece() instanceof Rook rook) {
+                    rook.castle = false;
+                } else if (this.chessboard.getSquare(move.toSquare().getRank(),move.toSquare().getFile()).getPiece() instanceof King king) {
+                    king.canCastle = false;
+                }
                 List<Square> allSquares = this.chessboard.getAllSquares();
                 for (Square a : allSquares) {
                     if (a != null && chessboard.isOccupiedByOpponent(a, isWhiteTurn ? Color.WHITE : Color.BLACK) && a.getPiece() instanceof Pawn pawn) {

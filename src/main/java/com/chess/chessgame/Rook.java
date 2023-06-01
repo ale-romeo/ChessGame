@@ -3,6 +3,8 @@ package com.chess.chessgame;
 public class Rook extends Piece {
     public Rook(Color color) { super(color); }
 
+    public boolean castle = true;
+
     @Override
     public void calculatePossibleMoves(Chessboard board, Square currentSquare, Square KingSquare) {
         this.clearAvailableMoves();

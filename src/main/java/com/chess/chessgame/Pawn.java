@@ -104,6 +104,7 @@ public class Pawn extends Piece {
             }
         }
 
+        //cattura di en passant
         Square enpass1 = board.getSquare(currentRank, (char) (currentFile + 1));
         Square enpass2 = board.getSquare(currentRank, (char) (currentFile - 1));
         if (captureSquare1 != null && enpass1 != null && board.isOccupiedByOpponent(enpass1, getColor()) && enpass1.getPiece() instanceof Pawn pawn && pawn.enpassant) {
