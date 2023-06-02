@@ -1,0 +1,13 @@
+.root {
+    -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, rgba(255,255,255,1), rgba(119,104,201,1));
+}
+
+.text-field {
+    -fx-prompt-text-fill: #999999;
+}
+
+.button {
+    -fx-background-color: #069f63;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+}
