@@ -43,7 +43,7 @@ public class ClientPlayer extends Application {
     private List<Move> posMoves = new ArrayList<>();
     private boolean myTurn, running = true;
     private volatile boolean wait, newGame;
-    private final TableView<ScoreboardEntry> scoreboardTable =new TableView<>();
+    private final TableView<ScoreboardEntry> scoreboardTable = new TableView<>();
 
 
     public static void main(String[] args) {
@@ -223,6 +223,7 @@ public class ClientPlayer extends Application {
 
                 scoreboardEntries.add(new ScoreboardEntry(nickname, wins, losses, draws));
             }
+            scoreboardTable.getColumns().clear();
             // Aggiorna la TableView con i dati della scoreboard
             scoreboardTable.getItems().setAll(scoreboardEntries);
             //this.scoreboard = receiveScoreboard();
@@ -249,10 +250,10 @@ public class ClientPlayer extends Application {
                 scoreboardTable.getColumns().add(lossesColumn);
                 scoreboardTable.getColumns().add(drawsColumn);
 
-                nicknameColumn.setPrefWidth(110);
+                nicknameColumn.setPrefWidth(100);
                 winsColumn.setPrefWidth(81);
                 lossesColumn.setPrefWidth(81);
-                drawsColumn.setPrefWidth(81);
+                drawsColumn.setPrefWidth(80);
                 scoreboardTable.setPrefWidth(300);
                 scoreboardTable.setMaxWidth(350);
 
@@ -266,7 +267,7 @@ public class ClientPlayer extends Application {
                 scoreBox.setAlignment(Pos.CENTER);
                 scoreBox.getChildren().addAll(scoreLabel, scoreboardTable, newGameButton);
                 primaryStage.setTitle("Chess Game - Classifica");
-                Scene scene = new Scene(scoreBox, 400, 300);
+                Scene scene = new Scene(scoreBox, 520, 540);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
@@ -568,7 +569,7 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Vittoria");
             Scene scene = new Scene(vbox, 520, 540);
@@ -609,7 +610,7 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Sconfitta");
             Scene scene = new Scene(vbox, 520, 540);
@@ -650,7 +651,7 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Patta");
             Scene scene = new Scene(vbox, 520, 540);
