@@ -11,8 +11,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.AudioClip;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -20,7 +22,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import org.bson.Document;
 import javafx.scene.control.Alert;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -56,6 +57,9 @@ public class ClientPlayer extends Application {
 
         Label titleLabel = new Label("ChessGame");
         titleLabel.setFont(Font.font("Anton", FontWeight.EXTRA_BOLD, 28));
+        ImageView startIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+        startIcon.setFitWidth(75);
+        startIcon.setFitHeight(100);
 
         // Creazione dei controlli
         Label nicknameLabel = new Label("Nickname:");
@@ -77,13 +81,23 @@ public class ClientPlayer extends Application {
         });
 
         // Creazione del layout
-        VBox vbox = new VBox(10);
-        vbox.setAlignment(Pos.CENTER);
-        vbox.setPadding(new Insets(10));
-        vbox.getChildren().addAll(titleLabel, nicknameLabel, nicknameTextField, startButton);
+        BorderPane root = new BorderPane();
+        root.setPadding(new Insets(10));
+
+        VBox topBox = new VBox(10);
+        topBox.setAlignment(Pos.CENTER);
+        topBox.setPadding(new Insets(20));
+        topBox.getChildren().addAll(new Label(), titleLabel, new Label(), startIcon);
+
+        VBox centerBox = new VBox(10);
+        centerBox.setAlignment(Pos.CENTER);
+        centerBox.getChildren().addAll(nicknameLabel, new Label(), nicknameTextField, new Label(), startButton);
+
+        root.setTop(topBox);
+        root.setCenter(centerBox);
 
         // Creazione della scena
-        Scene scene = new Scene(vbox, 400, 300);
+        Scene scene = new Scene(root, 520, 540);
         scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
         primaryStage.getIcons().add(new Image("file:src/main/img/Chess_nlt60.png"));
 
@@ -103,18 +117,20 @@ public class ClientPlayer extends Application {
             Platform.runLater(() -> {
                 Label waitingLabel = new Label("In attesa di un avversario...");
                 waitingLabel.setFont(Font.font("Roboto", FontWeight.SEMI_BOLD, 16));
+                ImageView waitIcon = new ImageView(new Image("file:src/main/img/waitImage.gif"));
+                waitIcon.setFitWidth(50);
+                waitIcon.setFitHeight(50);
                 VBox waitingBox = new VBox(10);
                 waitingBox.setPadding(new Insets(10));
                 waitingBox.setAlignment(Pos.CENTER);
-                waitingBox.getChildren().add(waitingLabel);
+                waitingBox.getChildren().addAll(waitingLabel, waitIcon);
                 primaryStage.setTitle("Chess Game - " + nickname + " in attesa");
-                Scene scene = new Scene(waitingBox, 400, 300);
+                Scene scene = new Scene(waitingBox, 520, 540);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
             sendNickname(nickname);
             this.color = receiveColor();
-
             playGame(primaryStage);
         } catch (IOException e) {
             e.printStackTrace();
@@ -132,6 +148,11 @@ public class ClientPlayer extends Application {
                     break;
                 }
                 this.chessboard = receiveChessboard();
+                if (this.chessboard == null) {
+                    break;
+                }
+                AudioClip audioClip = new AudioClip(receiveSound());
+                audioClip.play();
                 this.myTurn = receiveTurn();
 
                 if (Objects.equals(end, "Promo") && myTurn) {
@@ -150,6 +171,7 @@ public class ClientPlayer extends Application {
                     });
 
                     VBox root = new VBox(gridPane, surrButton);
+                    root.setStyle("-fx-background-color: radial-gradient(center 50% 45%, radius 65%, #7b68ee, #ffffff);");
                     root.setAlignment(Pos.CENTER);
                     root.setSpacing(10);
                     root.setPadding(new Insets(10));
@@ -167,16 +189,26 @@ public class ClientPlayer extends Application {
                 throw new RuntimeException(e);
             }
         }
-
-        if (((this.color == Color.WHITE) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.BLACK) && Objects.equals(end, "BLACK Wins"))) {
-            showWin(primaryStage);
-        } else if (((this.color == Color.BLACK) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.WHITE) && Objects.equals(end, "BLACK Wins"))) {
-            showLose(primaryStage);
-        } else if (Objects.equals(end, "Stalemate")) {
-            showDraw(primaryStage);
-        } else if (Objects.equals(end, "conn_err")) {
-            showWin(primaryStage);
+        try {
+            if (((this.color == Color.WHITE) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.BLACK) && Objects.equals(end, "BLACK Wins"))) {
+                AudioClip audioClip = new AudioClip(receiveSound());
+                audioClip.play();
+                showWin(primaryStage);
+            } else if (((this.color == Color.BLACK) && Objects.equals(end, "WHITE Wins")) || ((this.color == Color.WHITE) && Objects.equals(end, "BLACK Wins"))) {
+                AudioClip audioClip = new AudioClip(receiveSound());
+                audioClip.play();
+                showLose(primaryStage);
+            } else if (Objects.equals(end, "Stalemate")) {
+                AudioClip audioClip = new AudioClip(receiveSound());
+                audioClip.play();
+                showDraw(primaryStage);
+            } else if (Objects.equals(end, "conn_err")) {
+                showWin(primaryStage);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
+
     }
 
     private void showScoreboard(Stage primaryStage) {
@@ -269,6 +301,11 @@ public class ClientPlayer extends Application {
         return (end).equals("Running") || (end).equals("Promo");
     }
 
+    private String receiveSound() throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (String) serverInputStream.readObject();
+    }
+
     private Chessboard receiveChessboard() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
         Object receivedObject = serverInputStream.readObject();
@@ -276,6 +313,7 @@ public class ClientPlayer extends Application {
         if (receivedObject instanceof Chessboard) {
             return (Chessboard) receivedObject;
         } else {
+            end = (String) receivedObject;
             return null;
         }
     }
@@ -289,27 +327,27 @@ public class ClientPlayer extends Application {
         if (this.color == Color.WHITE) {// Inserimento delle lettere sotto ogni colonna
             for (char file = 'A'; file <= 'H'; file++) {
                 Label label = new Label(String.valueOf(file));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, file - 'A' + 1, 9);
             }
 
             // Inserimento delle lettere sopra ogni colonna
             for (char file = 'A'; file <= 'H'; file++) {
                 Label label = new Label(String.valueOf(file));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, file - 'A' + 1, 0);
             }
 
             // Inserimento dei numeri alla destra di ogni riga
             for (int rank = 8; rank >= 1; rank--) {
                 Label label = new Label(String.valueOf(rank));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 9, 9 - rank);
             }
             // Inserimento dei numeri alla sinistra di ogni riga
             for (int rank = 8; rank >= 1; rank--) {
                 Label label = new Label(String.valueOf(rank));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 0, 9 - rank);
             }
 
@@ -324,27 +362,27 @@ public class ClientPlayer extends Application {
             // Inserimento delle lettere sotto ogni colonna
             for (char file = 'H'; file >= 'A'; file--) {
                 Label label = new Label(String.valueOf(file));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 'H' - file + 1, 9);
             }
 
             // Inserimento delle lettere sopra ogni colonna
             for (char file = 'H'; file >= 'A'; file--) {
                 Label label = new Label(String.valueOf(file));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 'H' - file + 1, 0);
             }
 
             // Inserimento dei numeri alla destra di ogni riga
             for (int rank = 1; rank <= 8; rank++) {
                 Label label = new Label(String.valueOf(rank));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 9, rank);
             }
             // Inserimento dei numeri alla sinistra di ogni riga
             for (int rank = 1; rank <= 8; rank++) {
                 Label label = new Label(String.valueOf(rank));
-                label.setStyle("-fx-font-weight: bold;");
+                label.setStyle("-fx-font-weight: bold; -fx-padding: 5px;");
                 gridPane.add(label, 0, rank);
             }
 
@@ -509,8 +547,11 @@ public class ClientPlayer extends Application {
 
     private void showWin(Stage primaryStage) {
         Platform.runLater(() -> {
+            ImageView endIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+            endIcon.setFitWidth(75);
+            endIcon.setFitHeight(100);
             Label victoryLabel = new Label("Hai vinto!");
-            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
             Button scoreboardButton = new Button("Visualizza classifica");
             Button newGameButton = new Button("Nuova Partita");
 
@@ -527,10 +568,10 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
 
             primaryStage.setTitle("Vittoria");
-            Scene scene = new Scene(vbox, 400, 300);
+            Scene scene = new Scene(vbox, 520, 540);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -547,8 +588,11 @@ public class ClientPlayer extends Application {
 
     private void showLose(Stage primaryStage) {
         Platform.runLater(() -> {
+            ImageView endIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+            endIcon.setFitWidth(75);
+            endIcon.setFitHeight(100);
             Label victoryLabel = new Label("Hai perso!");
-            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
             Button scoreboardButton = new Button("Visualizza classifica");
             Button newGameButton = new Button("Nuova Partita");
 
@@ -565,10 +609,10 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
 
             primaryStage.setTitle("Sconfitta");
-            Scene scene = new Scene(vbox, 400, 300);
+            Scene scene = new Scene(vbox, 520, 540);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -585,8 +629,11 @@ public class ClientPlayer extends Application {
 
     private void showDraw(Stage primaryStage) {
         Platform.runLater(() -> {
+            ImageView endIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+            endIcon.setFitWidth(75);
+            endIcon.setFitHeight(100);
             Label victoryLabel = new Label("Patta!");
-            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
             Button scoreboardButton = new Button("Visualizza classifica");
             Button newGameButton = new Button("Nuova Partita");
 
@@ -603,10 +650,10 @@ public class ClientPlayer extends Application {
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
             vbox.setAlignment(Pos.CENTER);
-            vbox.getChildren().addAll(victoryLabel, scoreboardButton, newGameButton);
+            vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), scoreboardButton, newGameButton);
 
             primaryStage.setTitle("Patta");
-            Scene scene = new Scene(vbox, 400, 300);
+            Scene scene = new Scene(vbox, 520, 540);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -625,6 +672,7 @@ public class ClientPlayer extends Application {
         Platform.runLater(() -> {
             Label victoryLabel = new Label("Connessione persa con l'avversario");
             Button newGameButton = new Button("Nuova Partita");
+            victoryLabel.setFont(Font.font("Roboto", FontWeight.BOLD, 20));
 
             // Azione del pulsante "Nuova partita"
             newGameButton.setOnAction(event -> {
@@ -634,10 +682,13 @@ public class ClientPlayer extends Application {
 
             VBox vbox = new VBox(10);
             vbox.setPadding(new Insets(10));
+            vbox.setAlignment(Pos.CENTER);
             vbox.getChildren().addAll(victoryLabel, newGameButton);
 
             primaryStage.setTitle("Fine partita");
-            primaryStage.setScene(new Scene(vbox, 300, 200));
+            Scene scene = new Scene(vbox, 520, 540);
+            scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
+            primaryStage.setScene(scene);
         });
         while (!newGame) Thread.onSpinWait();
         newGame = false;

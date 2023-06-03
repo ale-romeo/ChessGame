@@ -5,6 +5,7 @@ module com.chess.chessgame {
     requires org.mongodb.driver.core;
     requires org.mongodb.driver.sync.client;
     requires org.mongodb.bson;
+    requires javafx.media;
 
 
     opens com.chess.chessgame to javafx.fxml;

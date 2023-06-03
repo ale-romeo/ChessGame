@@ -9,6 +9,7 @@ import java.util.*;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import javafx.scene.media.AudioClip;
 import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -23,6 +24,8 @@ public class ClientHandler implements Runnable {
     private String whitePlayer;
     private String blackPlayer;
     private String status = "Running";
+    private boolean castle = false, move_self = false, capture = false;
+    private String audioClip = "file:src/main/img/game-start.mp3";
 
     public ClientHandler(Socket clientSocket, Socket waitingClient) {
         Random random = new Random();
@@ -39,15 +42,15 @@ public class ClientHandler implements Runnable {
 
     public void run() {
         try {
-            receiveNickname(White, Black);
+            receiveNickname();
 
             sendColor(White, Color.WHITE);
             sendColor(Black, Color.BLACK);
             while (running) {
-                sendGameStatus(White, Black);
-                sendChessboard(White, this.chessboard);
-                sendChessboard(Black, this.chessboard);
-                sendTurn(White, Black, isWhiteTurn);
+                sendGameStatus();
+                sendChessboard(this.chessboard);
+                sendSound();
+                sendTurn(isWhiteTurn);
                 if (isWhiteTurn) {
                     handlePlayerTurn(White);
                     isWhiteTurn = false;
@@ -59,7 +62,8 @@ public class ClientHandler implements Runnable {
                     isWhiteTurn = !isWhiteTurn;
                 }
             }
-            sendGameStatus(White, Black);
+            sendGameStatus();
+            sendSound();
             sendScoreboard(White);
             sendScoreboard(Black);
         } catch (IOException e) {
@@ -103,10 +107,10 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    private void receiveNickname(Socket whiteSocket, Socket blackSocket) throws IOException, ClassNotFoundException {
-        ObjectInputStream whiteInputStream = new ObjectInputStream(whiteSocket.getInputStream());
+    private void receiveNickname() throws IOException, ClassNotFoundException {
+        ObjectInputStream whiteInputStream = new ObjectInputStream(White.getInputStream());
         whitePlayer = (String) whiteInputStream.readObject();
-        ObjectInputStream blackInputStream = new ObjectInputStream(blackSocket.getInputStream());
+        ObjectInputStream blackInputStream = new ObjectInputStream(Black.getInputStream());
         blackPlayer = (String) blackInputStream.readObject();
 
         System.out.println("Inizio partita tra " + whitePlayer + " e " + blackPlayer);
@@ -118,18 +122,22 @@ public class ClientHandler implements Runnable {
         clientOutputStream.flush();
     }
 
-    private void sendChessboard(Socket clientSocket, Chessboard chessboard) throws IOException {
-        ObjectOutputStream clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
-        clientOutputStream.writeObject(chessboard);
-        clientOutputStream.flush();
+    private void sendChessboard(Chessboard chessboard) throws IOException {
+        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
+        whiteOutputStream.writeObject(chessboard);
+        whiteOutputStream.flush();
+
+        ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
+        blackOutputStream.writeObject(chessboard);
+        blackOutputStream.flush();
     }
 
-    private void sendTurn(Socket whiteSocket, Socket blackSocket, boolean turn) throws IOException {
-        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(whiteSocket.getOutputStream());
+    private void sendTurn(boolean turn) throws IOException {
+        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
         whiteOutputStream.writeObject(turn ? Color.WHITE : Color.BLACK);
         whiteOutputStream.flush();
 
-        ObjectOutputStream blackOutputStream = new ObjectOutputStream(blackSocket.getOutputStream());
+        ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
         blackOutputStream.writeObject(turn ? Color.WHITE : Color.BLACK);
         blackOutputStream.flush();
     }
@@ -162,6 +170,13 @@ public class ClientHandler implements Runnable {
 
                 assert move != null;
                 this.chessboard.movePiece(move);
+                if (move.toSquare().getPiece() == null) {
+                    move_self = true;
+                } else if (move.toSquare().getPiece() instanceof King && Math.abs(move.fromSquare().getFile() - move.toSquare().getFile()) == 2) {
+                    castle = true;
+                } else {
+                    capture = true;
+                }
                 if (this.chessboard.getSquare(move.toSquare().getRank(),move.toSquare().getFile()).getPiece() instanceof Rook rook) {
                     rook.castle = false;
                 } else if (this.chessboard.getSquare(move.toSquare().getRank(),move.toSquare().getFile()).getPiece() instanceof King king) {
@@ -203,27 +218,42 @@ public class ClientHandler implements Runnable {
             }
         }
 
+        if (!allAvailableMoves.isEmpty() && ((King) Objects.requireNonNull(kingSquare).getPiece()).Check(this.chessboard, kingSquare)) {
+            audioClip = "file:src/main/img/move-check.mp3";
+        } else if(capture) {
+            audioClip = "file:src/main/img/capture.mp3";
+        } else if (castle) {
+            audioClip = "file:src/main/img/castle.mp3";
+        } else if (move_self) {
+            audioClip = "file:src/main/img/move-self.mp3";
+        }
+        capture = false;
+        move_self = false;
+        castle = false;
+
         if (allAvailableMoves.isEmpty() && ((King) Objects.requireNonNull(kingSquare).getPiece()).Check(this.chessboard, kingSquare)) {
             status = turn + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
+            audioClip = "file:src/main/img/game-end.mp3";
             return true;
         } else if (allAvailableMoves.isEmpty() && !((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
             status = "Stalemate"; // Aggiorna lo stato correttamente
             writeToMongoDB(whitePlayer, 0, 0, 1);
             writeToMongoDB(blackPlayer, 0, 0, 1);
+            audioClip = "file:src/main/img/game-end.mp3";
             return true;
         }
 
         return false;
     }
 
-    private void sendGameStatus(Socket whiteSocket, Socket blackSocket) throws IOException {
-        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(whiteSocket.getOutputStream());
+    private void sendGameStatus() throws IOException {
+        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
         whiteOutputStream.writeObject(status);
         whiteOutputStream.flush();
 
-        ObjectOutputStream blackOutputStream = new ObjectOutputStream(blackSocket.getOutputStream());
+        ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
         blackOutputStream.writeObject(status);
         blackOutputStream.flush();
     }
@@ -304,6 +334,17 @@ public class ClientHandler implements Runnable {
         ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
         outputStream.writeObject(scoreboardDocuments);
         outputStream.flush();
+    }
+
+    private void sendSound() throws IOException {
+        // Invia il sound effect al client
+        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
+        whiteOutputStream.writeObject(audioClip);
+        whiteOutputStream.flush();
+
+        ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
+        blackOutputStream.writeObject(audioClip);
+        blackOutputStream.flush();
     }
 
 }
