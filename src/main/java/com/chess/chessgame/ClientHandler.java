@@ -43,6 +43,7 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             receiveNickname();
+            sendNickname();
 
             sendColor(White, Color.WHITE);
             sendColor(Black, Color.BLACK);
@@ -116,6 +117,16 @@ public class ClientHandler implements Runnable {
         System.out.println("Inizio partita tra " + whitePlayer + " e " + blackPlayer);
     }
 
+    private void sendNickname() throws IOException {
+        ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
+        whiteOutputStream.writeObject(blackPlayer);
+        whiteOutputStream.flush();
+
+        ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
+        blackOutputStream.writeObject(whitePlayer);
+        blackOutputStream.flush();
+    }
+
     private void sendColor(Socket clientSocket, Color color) throws IOException {
         ObjectOutputStream clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream());
         clientOutputStream.writeObject(color);
@@ -150,6 +161,7 @@ public class ClientHandler implements Runnable {
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
             status = turn + " Wins";
+            audioClip = "file:src/main/img/game-end.mp3";
             running = false;
         } else {
             if (obj instanceof Piece piece && Objects.equals(status, "Promo")) {
@@ -176,6 +188,7 @@ public class ClientHandler implements Runnable {
                     castle = true;
                 } else {
                     capture = true;
+                    this.chessboard.addEatenPiece(move.toSquare().getPiece());
                 }
                 if (this.chessboard.getSquare(move.toSquare().getRank(),move.toSquare().getFile()).getPiece() instanceof Rook rook) {
                     rook.castle = false;

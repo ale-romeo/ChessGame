@@ -6,9 +6,11 @@ import java.util.List;
 
 public class Chessboard implements Serializable {
     private final Square[][] squares;
+    private List<Piece> eatenPieces;
 
     public Chessboard() {
         squares = new Square[8][8];
+        eatenPieces = new ArrayList<>();
         initializeBoard();
     }
 
@@ -100,6 +102,7 @@ public class Chessboard implements Serializable {
         squares[move.fromSquare().getRank() - 1][move.fromSquare().getFile() - 'A'].clearPiece();
         if (piece instanceof Pawn && (squares[move.toSquare().getRank() - 1 + direction][move.toSquare().getFile() - 'A']).getPiece() instanceof Pawn opPawn && opPawn.enpassant && opPawn.getColor() != piece.getColor()) {
             squares[move.toSquare().getRank() - 1 + direction][move.toSquare().getFile() - 'A'].clearPiece();
+            eatenPieces.add(opPawn);
         } else if (piece instanceof King && Math.abs(move.fromSquare().getFile() - move.toSquare().getFile()) == 2) {
             if (move.toSquare().getFile() == 'C') {
                 squares[move.fromSquare().getRank() - 1][0].clearPiece();
@@ -110,6 +113,14 @@ public class Chessboard implements Serializable {
             }
         }
         squares[move.toSquare().getRank() - 1][move.toSquare().getFile() - 'A'].setPiece(piece);
+    }
+
+    public List<Piece> getEatenPieces() {
+        return this.eatenPieces;
+    }
+
+    public void addEatenPiece(Piece piece) {
+        this.eatenPieces.add(piece);
     }
 
 }

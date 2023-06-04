@@ -11,9 +11,7 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.media.AudioClip;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -30,10 +28,9 @@ import java.net.Socket;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Objects;
-import javafx.scene.layout.HBox;
 
 public class ClientPlayer extends Application {
-    private String nickname, serverAddress, end;
+    private String nickname, oppNick, serverAddress, end;
     private Color color;
     private Socket serverSocket;
     private int serverPort;
@@ -97,7 +94,7 @@ public class ClientPlayer extends Application {
         root.setCenter(centerBox);
 
         // Creazione della scena
-        Scene scene = new Scene(root, 520, 540);
+        Scene scene = new Scene(root, 540, 580);
         scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
         primaryStage.getIcons().add(new Image("file:src/main/img/Chess_nlt60.png"));
 
@@ -125,11 +122,12 @@ public class ClientPlayer extends Application {
                 waitingBox.setAlignment(Pos.CENTER);
                 waitingBox.getChildren().addAll(waitingLabel, waitIcon);
                 primaryStage.setTitle("Chess Game - " + nickname + " in attesa");
-                Scene scene = new Scene(waitingBox, 520, 540);
+                Scene scene = new Scene(waitingBox, 540, 580);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
             sendNickname(nickname);
+            this.oppNick = receiveNickname();
             this.color = receiveColor();
             playGame(primaryStage);
         } catch (IOException e) {
@@ -161,22 +159,18 @@ public class ClientPlayer extends Application {
                 }
                 Platform.runLater(() -> {
                     GridPane gridPane = createChessboard();
-                    Button surrButton = new Button("Resa");
-                    surrButton.setStyle("-fx-background-color: #069f63; -fx-text-fill: white; -fx-font-size: 16px;");
 
-                    surrButton.setOnAction(event -> {
-                        sendSurr();
-                        wait = false;
-                        running = false;
-                    });
-
-                    VBox root = new VBox(gridPane, surrButton);
+                    VBox root = new VBox();
                     root.setStyle("-fx-background-color: radial-gradient(center 50% 45%, radius 65%, #7b68ee, #ffffff);");
                     root.setAlignment(Pos.CENTER);
                     root.setSpacing(10);
                     root.setPadding(new Insets(10));
+                    GridPane bottomPane = new GridPane(), topPane = new GridPane();
+                    showEatenPieces(bottomPane, topPane);
+                    root.getChildren().addAll(topPane, gridPane, bottomPane);
+
                     primaryStage.setTitle("Chess Game - " + nickname + " - " + this.color);
-                    primaryStage.setScene(new Scene(root, 520, 540));
+                    primaryStage.setScene(new Scene(root, 540, 580));
                     displayChessboard(gridPane);
                 });
                 if (myTurn) {
@@ -267,7 +261,7 @@ public class ClientPlayer extends Application {
                 scoreBox.setAlignment(Pos.CENTER);
                 scoreBox.getChildren().addAll(scoreLabel, scoreboardTable, newGameButton);
                 primaryStage.setTitle("Chess Game - Classifica");
-                Scene scene = new Scene(scoreBox, 520, 540);
+                Scene scene = new Scene(scoreBox, 540, 580);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
@@ -289,6 +283,11 @@ public class ClientPlayer extends Application {
     private Color receiveColor() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
         return (Color) serverInputStream.readObject();
+    }
+
+    private String receiveNickname() throws IOException, ClassNotFoundException {
+        ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
+        return (String) serverInputStream.readObject();
     }
 
     private boolean receiveTurn() throws IOException, ClassNotFoundException {
@@ -572,7 +571,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Vittoria");
-            Scene scene = new Scene(vbox, 520, 540);
+            Scene scene = new Scene(vbox, 540, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -613,7 +612,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Sconfitta");
-            Scene scene = new Scene(vbox, 520, 540);
+            Scene scene = new Scene(vbox, 540, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -654,7 +653,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Patta");
-            Scene scene = new Scene(vbox, 520, 540);
+            Scene scene = new Scene(vbox, 540, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -687,7 +686,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(victoryLabel, newGameButton);
 
             primaryStage.setTitle("Fine partita");
-            Scene scene = new Scene(vbox, 520, 540);
+            Scene scene = new Scene(vbox, 540, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -758,10 +757,6 @@ public class ClientPlayer extends Application {
         outputStream.flush();
     }
 
-    public Color getColor() {
-        return color;
-    }
-
     private void sendMove(Move move) {
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(serverSocket.getOutputStream());
@@ -798,5 +793,108 @@ public class ClientPlayer extends Application {
     private List<Document> receiveScoreboard() throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(serverSocket.getInputStream());
         return (List<Document>) inputStream.readObject();
+    }
+
+    private void showEatenPieces(GridPane bottomPane, GridPane topPane) {
+        bottomPane.setHgap(10);
+        topPane.setHgap(10);
+
+        Button surrButton = new Button("Resa");
+        surrButton.setStyle("-fx-background-color: #069f63; -fx-text-fill: white; -fx-font-size: 16px;");
+        Label ownNickname = new Label(nickname);
+        ownNickname.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+        Label oppNickname = new Label(oppNick);
+        oppNickname.setFont(Font.font("Roboto", FontWeight.BOLD, 16));
+        HBox ownEaten = new HBox();
+        HBox oppEaten = new HBox();
+        HBox ownPawns = new HBox();
+        HBox ownBishops = new HBox();
+        HBox ownRooks = new HBox();
+        HBox ownQueens = new HBox();
+        HBox ownKnights = new HBox();
+        HBox oppPawns = new HBox();
+        HBox oppRooks = new HBox();
+        HBox oppBishops = new HBox();
+        HBox oppKnights = new HBox();
+        HBox oppQueens = new HBox();
+
+        ownPawns.setSpacing(-10.5);
+        ownBishops.setSpacing(-10.5);
+        ownRooks.setSpacing(-10.5);
+        ownQueens.setSpacing(-10.5);
+        ownKnights.setSpacing(-10.5);
+        oppPawns.setSpacing(-10.5);
+        oppRooks.setSpacing(-10.5);
+        oppQueens.setSpacing(-10.5);
+        oppKnights.setSpacing(-10.5);
+        oppBishops.setSpacing(-10.5);
+
+        int count = 0;
+        for (Piece p : this.chessboard.getEatenPieces()) {
+            ImageView im_p = createPieceImageView(p);
+            im_p.setFitWidth(20);
+            im_p.setFitHeight(20);
+            if (p.getColor() != this.color) {
+                if (p instanceof Pawn) {
+                    ownPawns.getChildren().add(im_p);
+                    count += 1;
+                } else if (p instanceof Knight) {
+                    ownKnights.getChildren().add(im_p);
+                    count += 3;
+                } else if (p instanceof Bishop) {
+                    ownBishops.getChildren().add(im_p);
+                    count += 3;
+                } else if (p instanceof Queen) {
+                    ownQueens.getChildren().add(im_p);
+                    count += 10;
+                } else if (p instanceof Rook) {
+                    ownRooks.getChildren().add(im_p);
+                    count += 5;
+                }
+            } else {
+                if (p instanceof Pawn) {
+                    oppPawns.getChildren().add(im_p);
+                    count -= 1;
+                } else if (p instanceof Knight) {
+                    oppKnights.getChildren().add(im_p);
+                    count -= 3;
+                } else if (p instanceof Bishop) {
+                    oppBishops.getChildren().add(im_p);
+                    count -= 3;
+                } else if (p instanceof Queen) {
+                    oppQueens.getChildren().add(im_p);
+                    count -= 10;
+                } else if (p instanceof Rook) {
+                    oppRooks.getChildren().add(im_p);
+                    count -= 5;
+                }
+            }
+        }
+        ownEaten.getChildren().addAll(ownPawns, ownBishops, ownKnights, ownRooks, ownQueens);
+        oppEaten.getChildren().addAll(oppPawns, oppBishops, oppKnights, oppRooks, oppQueens);
+
+        Label ownCount = new Label(count > 0 ? "+ " + count : "");
+        Label oppCount = new Label(count < 0 ? "+ " + Math.abs(count) : "");
+
+        surrButton.setOnAction(event -> {
+            sendSurr();
+            wait = false;
+            running = false;
+        });
+
+        HBox thisPlayer = new HBox();
+        thisPlayer.getChildren().addAll(ownNickname, ownEaten, ownCount);
+        thisPlayer.setSpacing(10);
+        thisPlayer.setPrefWidth(300);
+
+        HBox opponentPlayer = new HBox();
+        opponentPlayer.getChildren().addAll(oppNickname, oppEaten, oppCount);
+        opponentPlayer.setSpacing(10);
+        opponentPlayer.setPrefWidth(300);
+
+        bottomPane.add(thisPlayer, 2, 0);
+        bottomPane.add(new Label(), 4, 0);
+        bottomPane.add(surrButton, 18, 0);
+        topPane.add(opponentPlayer, 2, 0);
     }
 }
