@@ -146,6 +146,7 @@ public class ClientPlayer extends Application {
                     break;
                 }
                 this.chessboard = receiveChessboard();
+                System.out.println(end);
                 if (this.chessboard == null) {
                     break;
                 }
@@ -287,7 +288,9 @@ public class ClientPlayer extends Application {
 
     private String receiveNickname() throws IOException, ClassNotFoundException {
         ObjectInputStream serverInputStream = new ObjectInputStream(serverSocket.getInputStream());
-        return (String) serverInputStream.readObject();
+        String[] nicknames = ((String) serverInputStream.readObject()).split(" ");
+        this.nickname = nicknames[0];
+        return nicknames[1];
     }
 
     private boolean receiveTurn() throws IOException, ClassNotFoundException {
@@ -870,11 +873,24 @@ public class ClientPlayer extends Application {
                 }
             }
         }
+
         ownEaten.getChildren().addAll(ownPawns, ownBishops, ownKnights, ownRooks, ownQueens);
         oppEaten.getChildren().addAll(oppPawns, oppBishops, oppKnights, oppRooks, oppQueens);
+        if (ownPawns.getChildren().isEmpty()) ownEaten.getChildren().remove(ownPawns);
+        if (ownBishops.getChildren().isEmpty()) ownEaten.getChildren().remove(ownBishops);
+        if (ownKnights.getChildren().isEmpty()) ownEaten.getChildren().remove(ownKnights);
+        if (ownRooks.getChildren().isEmpty()) ownEaten.getChildren().remove(ownRooks);
+        if (ownQueens.getChildren().isEmpty()) ownEaten.getChildren().remove(ownQueens);
+        if (oppPawns.getChildren().isEmpty()) oppEaten.getChildren().remove(oppPawns);
+        if (oppBishops.getChildren().isEmpty()) oppEaten.getChildren().remove(oppBishops);
+        if (oppKnights.getChildren().isEmpty()) oppEaten.getChildren().remove(oppKnights);
+        if (oppRooks.getChildren().isEmpty()) oppEaten.getChildren().remove(oppRooks);
+        if (oppQueens.getChildren().isEmpty()) oppEaten.getChildren().remove(oppQueens);
 
         Label ownCount = new Label(count > 0 ? "+ " + count : "");
         Label oppCount = new Label(count < 0 ? "+ " + Math.abs(count) : "");
+        ownCount.setFont(Font.font("Roboto", FontWeight.SEMI_BOLD, 14));
+        oppCount.setFont(Font.font("Roboto", FontWeight.SEMI_BOLD, 14));
 
         surrButton.setOnAction(event -> {
             sendSurr();
@@ -883,18 +899,18 @@ public class ClientPlayer extends Application {
         });
 
         HBox thisPlayer = new HBox();
-        thisPlayer.getChildren().addAll(ownNickname, ownEaten, ownCount);
-        thisPlayer.setSpacing(10);
+        thisPlayer.getChildren().addAll(ownNickname, new Label(), ownEaten, ownCount);
+        thisPlayer.setSpacing(1);
         thisPlayer.setPrefWidth(300);
 
         HBox opponentPlayer = new HBox();
-        opponentPlayer.getChildren().addAll(oppNickname, oppEaten, oppCount);
-        opponentPlayer.setSpacing(10);
+        opponentPlayer.getChildren().addAll(oppNickname, new Label(), oppEaten, oppCount);
+        opponentPlayer.setSpacing(1);
         opponentPlayer.setPrefWidth(300);
 
         bottomPane.add(thisPlayer, 2, 0);
         bottomPane.add(new Label(), 4, 0);
-        bottomPane.add(surrButton, 18, 0);
+        bottomPane.add(surrButton, 16, 0);
         topPane.add(opponentPlayer, 2, 0);
     }
 }

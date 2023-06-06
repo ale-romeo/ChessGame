@@ -25,7 +25,7 @@ public class ClientHandler implements Runnable {
     private String blackPlayer;
     private String status = "Running";
     private boolean castle = false, move_self = false, capture = false;
-    private String audioClip = "file:src/main/img/game-start.mp3";
+    private String audioClip = "file:src/main/img/game-start.wav";
 
     public ClientHandler(Socket clientSocket, Socket waitingClient) {
         Random random = new Random();
@@ -70,18 +70,19 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             System.out.println("Errore durante l'esecuzione del client handler: " + e.getMessage());
             try {
-                System.out.println(waitForResponse(White) ? "Black disconnesso" : "White disconnesso");
-                writeToMongoDB(whitePlayer, 1, 0, 0);
-                writeToMongoDB(blackPlayer, 0, 1, 0);
-                sendConnErr(White);
-                sendScoreboard(White);
-            } catch (IOException | ClassNotFoundException ex) {
-                writeToMongoDB(blackPlayer, 1, 0, 0);
-                writeToMongoDB(whitePlayer, 0, 1, 0);
+                System.out.println(waitForResponse(isWhiteTurn ? White : Black));
+                writeToMongoDB(isWhiteTurn ? whitePlayer : blackPlayer, 1, 0, 0);
+                writeToMongoDB(isWhiteTurn ? blackPlayer : whitePlayer, 0, 1, 0);
+                sendConnErr(isWhiteTurn ? White : Black);
+                sendScoreboard(isWhiteTurn ? White : Black);
+            } catch (IOException ex) {
                 try {
-                    sendConnErr(Black);
-                    sendScoreboard(Black);
-                } catch (IOException | ClassNotFoundException exc) {
+                    System.out.println(isWhiteTurn ? "White disconnesso" : "Black disconnesso");
+                    writeToMongoDB(isWhiteTurn ? blackPlayer : whitePlayer, 1, 0, 0);
+                    writeToMongoDB(isWhiteTurn ? whitePlayer : blackPlayer, 0, 1, 0);
+                    sendConnErr(isWhiteTurn ? Black : White);
+                    sendScoreboard(isWhiteTurn ? Black : White);
+                } catch (IOException exc) {
                     throw new RuntimeException(exc);
                 }
             }
@@ -113,17 +114,23 @@ public class ClientHandler implements Runnable {
         whitePlayer = (String) whiteInputStream.readObject();
         ObjectInputStream blackInputStream = new ObjectInputStream(Black.getInputStream());
         blackPlayer = (String) blackInputStream.readObject();
+        if (whitePlayer.equals(blackPlayer)) {
+            Random r = new Random();
+            int rr = r.nextInt(1000);
+            blackPlayer += String.valueOf(rr);
+            System.out.println("I giocatori hanno inserito lo stesso nickname. Il nickname del nero è stato cambiato in: " + blackPlayer);
+        }
 
         System.out.println("Inizio partita tra " + whitePlayer + " e " + blackPlayer);
     }
 
     private void sendNickname() throws IOException {
         ObjectOutputStream whiteOutputStream = new ObjectOutputStream(White.getOutputStream());
-        whiteOutputStream.writeObject(blackPlayer);
+        whiteOutputStream.writeObject(whitePlayer + " " + blackPlayer);
         whiteOutputStream.flush();
 
         ObjectOutputStream blackOutputStream = new ObjectOutputStream(Black.getOutputStream());
-        blackOutputStream.writeObject(whitePlayer);
+        blackOutputStream.writeObject(blackPlayer + " " + whitePlayer);
         blackOutputStream.flush();
     }
 
@@ -161,7 +168,7 @@ public class ClientHandler implements Runnable {
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
             status = turn + " Wins";
-            audioClip = "file:src/main/img/game-end.mp3";
+            audioClip = "file:src/main/img/game-end.wav";
             running = false;
         } else {
             if (obj instanceof Piece piece && Objects.equals(status, "Promo")) {
@@ -232,13 +239,13 @@ public class ClientHandler implements Runnable {
         }
 
         if (!allAvailableMoves.isEmpty() && ((King) Objects.requireNonNull(kingSquare).getPiece()).Check(this.chessboard, kingSquare)) {
-            audioClip = "file:src/main/img/move-check.mp3";
+            audioClip = "file:src/main/img/move-check.wav";
         } else if(capture) {
-            audioClip = "file:src/main/img/capture.mp3";
+            audioClip = "file:src/main/img/capture.wav";
         } else if (castle) {
-            audioClip = "file:src/main/img/castle.mp3";
+            audioClip = "file:src/main/img/castle.wav";
         } else if (move_self) {
-            audioClip = "file:src/main/img/move-self.mp3";
+            audioClip = "file:src/main/img/move-self.wav";
         }
         capture = false;
         move_self = false;
@@ -248,13 +255,13 @@ public class ClientHandler implements Runnable {
             status = turn + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
-            audioClip = "file:src/main/img/game-end.mp3";
+            audioClip = "file:src/main/img/game-end.wav";
             return true;
         } else if (allAvailableMoves.isEmpty() && !((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
             status = "Stalemate"; // Aggiorna lo stato correttamente
             writeToMongoDB(whitePlayer, 0, 0, 1);
             writeToMongoDB(blackPlayer, 0, 0, 1);
-            audioClip = "file:src/main/img/game-end.mp3";
+            audioClip = "file:src/main/img/game-end.wav";
             return true;
         }
 
@@ -271,12 +278,7 @@ public class ClientHandler implements Runnable {
         blackOutputStream.flush();
     }
 
-    private void sendConnErr(Socket currentSocket) throws IOException, ClassNotFoundException {
-        ObjectInputStream currInputStream = new ObjectInputStream(currentSocket.getInputStream());
-        if (currInputStream.available() > 0) {
-            currInputStream.skip(currInputStream.available());
-        }
-
+    private void sendConnErr(Socket currentSocket) throws IOException {
         ObjectOutputStream currOutputStream = new ObjectOutputStream(currentSocket.getOutputStream());
         currOutputStream.writeObject("conn_err");
         currOutputStream.flush();
@@ -317,18 +319,14 @@ public class ClientHandler implements Runnable {
         mongoClient.close();
     }
 
-    private boolean waitForResponse(Socket clientSocket) throws IOException {
+    private String waitForResponse(Socket clientSocket) throws IOException {
         // Imposta un timeout per la lettura della risposta del client
         try {
             ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
             Object receivedObject = inputStream.readObject();
-            if (receivedObject instanceof Move) {
-                return true;
-            } else {
-                return receivedObject.equals("ping");
-            }
+            return isWhiteTurn ? "Black disconnesso" : "White disconnesso";
         } catch (ClassNotFoundException | SocketTimeoutException e) {
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
