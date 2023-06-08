@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Chessboard implements Serializable {
     private final Square[][] squares;
-    private List<Piece> eatenPieces;
+    private final List<Piece> eatenPieces;
 
     public Chessboard() {
         squares = new Square[8][8];

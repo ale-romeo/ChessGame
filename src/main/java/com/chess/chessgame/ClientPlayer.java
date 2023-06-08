@@ -54,7 +54,7 @@ public class ClientPlayer extends Application {
 
         Label titleLabel = new Label("ChessGame");
         titleLabel.setFont(Font.font("Anton", FontWeight.EXTRA_BOLD, 28));
-        ImageView startIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+        ImageView startIcon = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/game-end.gif"));
         startIcon.setFitWidth(75);
         startIcon.setFitHeight(100);
 
@@ -94,7 +94,7 @@ public class ClientPlayer extends Application {
         root.setCenter(centerBox);
 
         // Creazione della scena
-        Scene scene = new Scene(root, 540, 580);
+        Scene scene = new Scene(root, 550, 580);
         scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
         primaryStage.getIcons().add(new Image("file:src/main/img/Chess_nlt60.png"));
 
@@ -114,7 +114,7 @@ public class ClientPlayer extends Application {
             Platform.runLater(() -> {
                 Label waitingLabel = new Label("In attesa di un avversario...");
                 waitingLabel.setFont(Font.font("Roboto", FontWeight.SEMI_BOLD, 16));
-                ImageView waitIcon = new ImageView(new Image("file:src/main/img/waitImage.gif"));
+                ImageView waitIcon = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/waitImage.gif"));
                 waitIcon.setFitWidth(50);
                 waitIcon.setFitHeight(50);
                 VBox waitingBox = new VBox(10);
@@ -122,7 +122,7 @@ public class ClientPlayer extends Application {
                 waitingBox.setAlignment(Pos.CENTER);
                 waitingBox.getChildren().addAll(waitingLabel, waitIcon);
                 primaryStage.setTitle("Chess Game - " + nickname + " in attesa");
-                Scene scene = new Scene(waitingBox, 540, 580);
+                Scene scene = new Scene(waitingBox, 550, 580);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
@@ -171,7 +171,7 @@ public class ClientPlayer extends Application {
                     root.getChildren().addAll(topPane, gridPane, bottomPane);
 
                     primaryStage.setTitle("Chess Game - " + nickname + " - " + this.color);
-                    primaryStage.setScene(new Scene(root, 540, 580));
+                    primaryStage.setScene(new Scene(root, 550, 580));
                     displayChessboard(gridPane);
                 });
                 if (myTurn) {
@@ -262,7 +262,7 @@ public class ClientPlayer extends Application {
                 scoreBox.setAlignment(Pos.CENTER);
                 scoreBox.getChildren().addAll(scoreLabel, scoreboardTable, newGameButton);
                 primaryStage.setTitle("Chess Game - Classifica");
-                Scene scene = new Scene(scoreBox, 540, 580);
+                Scene scene = new Scene(scoreBox, 550, 580);
                 scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
                 primaryStage.setScene(scene);
             });
@@ -485,14 +485,14 @@ public class ClientPlayer extends Application {
         alert.setTitle("Promozione");
         alert.setHeaderText("Seleziona pezzo:");
 
-        ImageView wqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qlt60.png"));
-        ImageView bqueenImageView = new ImageView(new Image("file:src/main/img/Chess_qdt60.png"));
-        ImageView wrookImageView = new ImageView(new Image("file:src/main/img/Chess_rlt60.png"));
-        ImageView brookImageView = new ImageView(new Image("file:src/main/img/Chess_rdt60.png"));
-        ImageView wbishopImageView = new ImageView(new Image("file:src/main/img/Chess_blt60.png"));
-        ImageView bbishopImageView = new ImageView(new Image("file:src/main/img/Chess_bdt60.png"));
-        ImageView wknightImageView = new ImageView(new Image("file:src/main/img/Chess_nlt60.png"));
-        ImageView bknightImageView = new ImageView(new Image("file:src/main/img/Chess_ndt60.png"));
+        ImageView wqueenImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_qlt60.png"));
+        ImageView bqueenImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_qdt60.png"));
+        ImageView wrookImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_rlt60.png"));
+        ImageView brookImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_rdt60.png"));
+        ImageView wbishopImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_blt60.png"));
+        ImageView bbishopImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_bdt60.png"));
+        ImageView wknightImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_nlt60.png"));
+        ImageView bknightImageView = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_ndt60.png"));
 
 
         // Aggiunta dei bottoni di scelta per i tipi di pezzo
@@ -550,7 +550,7 @@ public class ClientPlayer extends Application {
 
     private void showWin(Stage primaryStage) {
         Platform.runLater(() -> {
-            ImageView endIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+            ImageView endIcon = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/game-end.gif"));
             endIcon.setFitWidth(75);
             endIcon.setFitHeight(100);
             Label victoryLabel = new Label("Hai vinto!");
@@ -574,7 +574,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Vittoria");
-            Scene scene = new Scene(vbox, 540, 580);
+            Scene scene = new Scene(vbox, 550, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -615,7 +615,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Sconfitta");
-            Scene scene = new Scene(vbox, 540, 580);
+            Scene scene = new Scene(vbox, 550, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -632,7 +632,7 @@ public class ClientPlayer extends Application {
 
     private void showDraw(Stage primaryStage) {
         Platform.runLater(() -> {
-            ImageView endIcon = new ImageView(new Image("file:src/main/img/game-end.gif"));
+            ImageView endIcon = new ImageView(new Image("file:src/main/resources/com/chess/chessgame/img/game-end.gif"));
             endIcon.setFitWidth(75);
             endIcon.setFitHeight(100);
             Label victoryLabel = new Label("Patta!");
@@ -656,7 +656,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(endIcon, victoryLabel, new Label(), new Label(), newGameButton, scoreboardButton);
 
             primaryStage.setTitle("Patta");
-            Scene scene = new Scene(vbox, 540, 580);
+            Scene scene = new Scene(vbox, 550, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -689,7 +689,7 @@ public class ClientPlayer extends Application {
             vbox.getChildren().addAll(victoryLabel, newGameButton);
 
             primaryStage.setTitle("Fine partita");
-            Scene scene = new Scene(vbox, 540, 580);
+            Scene scene = new Scene(vbox, 550, 580);
             scene.getStylesheets().add("file:src/main/resources/com/chess/chessgame/style.css");
             primaryStage.setScene(scene);
         });
@@ -710,40 +710,40 @@ public class ClientPlayer extends Application {
         // Imposta l'immagine del pezzo in base al tipo e al colore
         if (piece instanceof Pawn) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_plt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_plt60.png"));
 
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_pdt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_pdt60.png"));
             }
         } else if (piece instanceof Rook) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_rlt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_rlt60.png"));
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_rdt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_rdt60.png"));
             }
         } else if (piece instanceof Queen) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_qlt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_qlt60.png"));
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_qdt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_qdt60.png"));
             }
         } else if (piece instanceof King) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_klt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_klt60.png"));
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_kdt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_kdt60.png"));
             }
         } else if (piece instanceof Bishop) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_blt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_blt60.png"));
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_bdt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_bdt60.png"));
             }
         } else if (piece instanceof Knight) {
             if (piece.getColor() == Color.WHITE) {
-                imageView.setImage(new Image("file:src/main/img/Chess_nlt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_nlt60.png"));
             } else {
-                imageView.setImage(new Image("file:src/main/img/Chess_ndt60.png"));
+                imageView.setImage(new Image("file:src/main/resources/com/chess/chessgame/img/Chess_ndt60.png"));
             }
         }
 

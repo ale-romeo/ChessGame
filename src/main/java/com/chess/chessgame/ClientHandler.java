@@ -9,7 +9,6 @@ import java.util.*;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import javafx.scene.media.AudioClip;
 import org.bson.Document;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -25,7 +24,7 @@ public class ClientHandler implements Runnable {
     private String blackPlayer;
     private String status = "Running";
     private boolean castle = false, move_self = false, capture = false;
-    private String audioClip = "file:src/main/img/game-start.wav";
+    private String audioClip = "file:src/main/resources/com/chess/chessgame/sounds/game-start.wav";
 
     public ClientHandler(Socket clientSocket, Socket waitingClient) {
         Random random = new Random();
@@ -168,7 +167,7 @@ public class ClientHandler implements Runnable {
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
             status = turn + " Wins";
-            audioClip = "file:src/main/img/game-end.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/game-end.wav";
             running = false;
         } else {
             if (obj instanceof Piece piece && Objects.equals(status, "Promo")) {
@@ -239,13 +238,13 @@ public class ClientHandler implements Runnable {
         }
 
         if (!allAvailableMoves.isEmpty() && ((King) Objects.requireNonNull(kingSquare).getPiece()).Check(this.chessboard, kingSquare)) {
-            audioClip = "file:src/main/img/move-check.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/move-check.wav";
         } else if(capture) {
-            audioClip = "file:src/main/img/capture.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/capture.wav";
         } else if (castle) {
-            audioClip = "file:src/main/img/castle.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/castle.wav";
         } else if (move_self) {
-            audioClip = "file:src/main/img/move-self.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/move-self.wav";
         }
         capture = false;
         move_self = false;
@@ -255,13 +254,13 @@ public class ClientHandler implements Runnable {
             status = turn + " Wins"; // Aggiorna lo stato correttamente
             writeToMongoDB((isWhiteTurn ? blackPlayer : whitePlayer), 1, 0, 0);
             writeToMongoDB((isWhiteTurn ? whitePlayer : blackPlayer), 0, 1, 0);
-            audioClip = "file:src/main/img/game-end.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/game-end.wav";
             return true;
         } else if (allAvailableMoves.isEmpty() && !((King) kingSquare.getPiece()).Check(this.chessboard, kingSquare)) {
             status = "Stalemate"; // Aggiorna lo stato correttamente
             writeToMongoDB(whitePlayer, 0, 0, 1);
             writeToMongoDB(blackPlayer, 0, 0, 1);
-            audioClip = "file:src/main/img/game-end.wav";
+            audioClip = "file:src/main/resources/com/chess/chessgame/sounds/game-end.wav";
             return true;
         }
 
